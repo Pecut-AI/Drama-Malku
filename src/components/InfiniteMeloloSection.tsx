@@ -43,8 +43,15 @@ export function InfiniteMeloloSection({ title }: InfiniteMeloloSectionProps) {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Flatten pages into a single array of books
-  const allBooks = data?.pages.flatMap((page) => page.books) || [];
+  // Flatten pages into a single array of books, deduplicated across pages
+  // by book_id (upstream feed can return overlapping titles between offsets)
+  const seenBookIds = new Set<string>();
+  const allBooks = (data?.pages.flatMap((page) => page.books) || []).filter((book) => {
+    if (!book?.book_id) return false;
+    if (seenBookIds.has(book.book_id)) return false;
+    seenBookIds.add(book.book_id);
+    return true;
+  });
 
   if (isError) {
     return (
@@ -83,7 +90,7 @@ export function InfiniteMeloloSection({ title }: InfiniteMeloloSectionProps) {
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
         {allBooks.map((book, index) => (
           <UnifiedMediaCard 
-            key={`${book.book_id}-${index}`} 
+            key={book.book_id} 
             index={index}
             title={book.book_name}
             cover={book.thumb_url}
