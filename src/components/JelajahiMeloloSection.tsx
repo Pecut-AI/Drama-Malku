@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { fetchJson } from "@/lib/fetcher";
@@ -92,6 +93,28 @@ export function JelajahiMeloloSection() {
     return mergeInterleaved(perKeyword).filter((b) => !excluded.has(b.book_id));
   }, [perKeyword, trendingData, latestData]);
 
+  // Gulir tanpa batas (penyeragaman pola muat daftar, permintaan Elnath):
+  // sentinel di bawah grid — saat mendekati viewport, irisan berikutnya dari
+  // pool yang SUDAH dipanen ditampilkan. Tetap nol request tambahan.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const hasMoreRef = useRef(false);
+  hasMoreRef.current = visibleCount < books.length;
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreRef.current) {
+          setVisibleCount((c) => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: "600px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [books.length]);
+
   if (isLoading) {
     return (
       <section className="space-y-4">
@@ -136,19 +159,18 @@ export function JelajahiMeloloSection() {
             cover={book.thumb_url}
             link={`/detail/melolo/${book.book_id}`}
             episodes={book.serial_count || 0}
+            meta={book.stat_infos?.[0] || undefined}
             topLeftBadge={null}
           />
         ))}
       </div>
 
-      <div className="py-8 flex justify-center w-full">
+      <div ref={sentinelRef} className="py-8 flex justify-center w-full">
         {hasMore ? (
-          <button
-            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            className="px-6 py-2.5 rounded-full bg-muted hover:bg-muted/70 text-foreground text-sm font-medium transition-colors"
-          >
-            Muat Lebih Banyak
-          </button>
+          <span className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Memuat lebih banyak…
+          </span>
         ) : (
           <p className="text-muted-foreground text-sm">
             Itu semua untuk saat ini — daftar diperbarui berkala

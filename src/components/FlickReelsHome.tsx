@@ -72,6 +72,7 @@ export function FlickReelsHome() {
                   cover={drama.cover}
                   link={`/detail/flickreels/${drama.playletId}`}
                   episodes={drama.totalEpisodes}
+                  meta={drama.hotNum || undefined}
                 />
               ))}
             </div>

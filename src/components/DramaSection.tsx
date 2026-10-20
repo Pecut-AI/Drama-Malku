@@ -65,6 +65,7 @@ export function DramaSection({ title, dramas, isLoading, error, onRetry }: Drama
               cover={drama.coverWap || drama.cover || ""}
               link={`/detail/dramabox/${drama.bookId}`}
               episodes={drama.chapterCount}
+              meta={drama.tagNames?.slice(0, 2).join(" • ") || undefined}
               topLeftBadge={drama.corner ? {
                 text: drama.corner.name,
                 color: badgeColor

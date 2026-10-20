@@ -59,6 +59,7 @@ export function PineDramaSection({ title, dramas, isLoading, error, onRetry }: P
             cover={drama.cover || ""}
             link={`/detail/pinedrama/${drama.collection_id}`}
             episodes={drama.total_episodes}
+            meta={drama.categories || undefined}
 
             topLeftBadge={
               drama.label_hot ? { text: "HOT", color: "#E52E2E" } :

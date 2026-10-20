@@ -1,6 +1,7 @@
 "use client";
 
 import { useShortMaxRekomendasi } from "@/hooks/useShortMax";
+import { formatViews } from "@/hooks/usePineDrama";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
@@ -74,6 +75,7 @@ export function ShortMaxHome() {
                   cover={drama.cover}
                   link={`/detail/shortmax/${drama.shortPlayId}`}
                   episodes={drama.totalEpisodes}
+                  meta={drama.playNum ? `${formatViews(drama.playNum)} ditonton` : undefined}
                   topLeftBadge={drama.label ? {
                     text: drama.label,
                     color: drama.label === "Hot" ? "#E52E2E" : "#6366f1"

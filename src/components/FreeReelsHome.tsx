@@ -130,6 +130,7 @@ export function FreeReelsHome() {
                     cover={item.cover}
                     link={`/detail/freereels/${item.key}`}
                     episodes={item.episode_count || 0}
+                    meta={item.content_tags?.slice(0, 2).join(" • ") || undefined}
                     topRightBadge={item.follow_count ? { text: `${(item.follow_count / 1000).toFixed(1)}k`, isTransparent: true } : null}
                   />
                 ))}
@@ -181,6 +182,7 @@ export function FreeReelsHome() {
                           cover={item.cover}
                           link={`/detail/freereels/${item.key}`}
                           episodes={item.episode_count || 0}
+                          meta={item.content_tags?.slice(0, 2).join(" • ") || undefined}
                           topRightBadge={item.follow_count ? { text: `${(item.follow_count / 1000).toFixed(1)}k`, isTransparent: true } : null}
                         />
                       ))}

@@ -34,6 +34,7 @@ function BookGrid({ books }: { books: MeloloBook[] }) {
           cover={book.thumb_url}
           link={`/detail/melolo/${book.book_id}`}
           episodes={book.serial_count || 0}
+          meta={book.stat_infos?.[0] || undefined}
           topLeftBadge={null}
           index={index}
         />

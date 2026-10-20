@@ -19,6 +19,8 @@ export interface UnifiedMediaCardProps {
   cover: string;
   link: string;
   episodes?: number;
+  /** Satu baris meta kecil di bawah judul (genre, jumlah tonton, dsb). */
+  meta?: string;
   topLeftBadge?: BadgeConfig | null;
   topRightBadge?: BadgeConfig | null;
   index?: number;
@@ -29,6 +31,7 @@ export function UnifiedMediaCard({
   cover,
   link,
   episodes = 0,
+  meta,
   topLeftBadge,
   topRightBadge,
   index = 0,
@@ -123,6 +126,11 @@ export function UnifiedMediaCard({
         <h3 className="font-display font-semibold text-xs md:text-sm leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {title}
         </h3>
+        {meta && (
+          <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
+            {meta}
+          </p>
+        )}
       </div>
     </Link>
   );

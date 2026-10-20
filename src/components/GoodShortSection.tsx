@@ -58,6 +58,7 @@ export function GoodShortSection({ title, dramas, isLoading, error, onRetry }: G
             cover={drama.cover || ""}
             link={`/detail/goodshort/${drama.bookId}`}
             episodes={drama.chapterCount}
+            meta={drama.typeTwoNames?.slice(0, 2).join(" • ") || undefined}
 
             topRightBadge={drama.viewCountDisplay ? {
               text: drama.viewCountDisplay,

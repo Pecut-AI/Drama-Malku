@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Play, Flame } from "lucide-react";
 import { useReelShortHomepage } from "@/hooks/useReelShort";
+import { formatViews } from "@/hooks/usePineDrama";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
 import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
@@ -124,6 +125,7 @@ export function ReelShortSection() {
                   cover={book.book_pic}
                   link={`/detail/reelshort/${book.book_id}`}
                   episodes={book.chapter_count}
+                  meta={book.read_count ? `${formatViews(book.read_count)} ditonton` : undefined}
                   topLeftBadge={book.book_mark?.text ? {
                     text: book.book_mark.text,
                     color: book.book_mark.color || "#E52E2E",
