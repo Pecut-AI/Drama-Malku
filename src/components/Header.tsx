@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,14 +20,17 @@ import { usePathname } from "next/navigation";
 import { optimizeThumb } from "@/lib/image-utils";
 
 /**
- * Pencarian global (20 Okt 2026): satu kolom pencarian menelusuri SEMUA platform
- * sekaligus, hasil dikelompokkan per platform. Platform aktif dicari duluan
- * (debounce pendek), platform lain menyusul (debounce lebih panjang) agar
- * beban ke API Sansekai tersebar — hasil per platform juga di-cache server
- * 60 detik oleh route pencariannya masing-masing.
+ * Pencarian global model klik-chip (20 Okt 2026): satu kolom pencarian untuk
+ * SEMUA platform, tetapi yang otomatis dicari hanya platform aktif. Platform
+ * lain baru dicari saat chip-nya diklik pengguna; chip "Semua Platform"
+ * mengaktifkan sisanya secara bergelombang (bertahap, bukan serentak).
+ * Model ini dipilih Elnath agar beban ke API Sansekai (batas demo
+ * ±10 request/menit, dibagi semua pengunjung) jauh lebih aman daripada
+ * menelusuri semua platform setiap kali mengetik.
  *
- * Bentuk data pencarian tiap platform berbeda-beda, jadi setiap platform
- * punya adaptor kecil yang menormalkan hasilnya ke GlobalSearchItem.
+ * Hasil dikelompokkan per platform; bentuk data pencarian tiap platform
+ * berbeda-beda, jadi setiap platform punya adaptor kecil yang menormalkan
+ * hasilnya ke GlobalSearchItem.
  */
 
 const MIN_QUERY_LENGTH = 3;
@@ -187,23 +190,29 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformModalOpen, setPlatformModalOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<"all" | Platform>("all");
+  // Platform yang sudah diminta dicari untuk query saat ini (model klik-chip).
+  // Platform aktif selalu termasuk; sisanya masuk hanya lewat klik chip.
+  const [activatedPlatforms, setActivatedPlatforms] = useState<Platform[]>([]);
+  const waveTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Platform aktif memakai debounce pendek agar terasa instan; platform lain
-  // debounce lebih panjang supaya request ke API tersebar, bukan serentak.
-  const fastDebounced = useDebounce(searchQuery, 400);
-  const slowDebounced = useDebounce(searchQuery, 1000);
-  const fastQuery = fastDebounced.trim();
-  const slowQuery = slowDebounced.trim();
+  const debouncedQuery = useDebounce(searchQuery, 400);
+  const fastQuery = debouncedQuery.trim();
 
   // Platform context
   const { currentPlatform, platformInfo, platforms, setPlatform, getPlatformInfo } = usePlatform();
 
+  const effectiveActivated: Platform[] = Array.from(
+    new Set<Platform>([currentPlatform, ...activatedPlatforms])
+  );
+  const allActivated = platforms.every((p) => effectiveActivated.includes(p.id));
+
   const queryFor = (id: Platform): string => {
-    const q = currentPlatform === id ? fastQuery : slowQuery;
-    return q.length >= MIN_QUERY_LENGTH ? q : "";
+    if (!effectiveActivated.includes(id)) return "";
+    return fastQuery.length >= MIN_QUERY_LENGTH ? fastQuery : "";
   };
 
-  // Pencarian global: semua hook menerima query (dulu hanya platform aktif).
+  // Model klik-chip: hook platform yang belum diaktifkan menerima query kosong
+  // (nonaktif), jadi tidak ada request sama sekali untuk platform itu.
   const pine = usePineDramaSearch(queryFor("pinedrama"));
   const dbox = useSearchDramas(queryFor("dramabox"));
   const reel = useReelShortSearch(queryFor("reelshort"));
@@ -251,10 +260,42 @@ export function Header() {
   );
   const groupsWithResults = visibleGroups.filter((g) => g.items.length > 0);
 
-  // Saring platform kembali ke "Semua" setiap query berubah.
+  // Setiap query berubah: saringan kembali ke "Semua", aktivasi platform
+  // kembali hanya platform aktif, dan gelombang aktivasi lama dibatalkan.
   useEffect(() => {
     setPlatformFilter("all");
+    setActivatedPlatforms([]);
+    waveTimers.current.forEach((t) => clearTimeout(t));
+    waveTimers.current = [];
   }, [fastQuery]);
+
+  const activatePlatform = (id: Platform) => {
+    setActivatedPlatforms((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setPlatformFilter(id);
+  };
+
+  // "Semua Platform": aktifkan sisa platform bergelombang (3 per gelombang,
+  // jeda 700 milidetik) agar request ke API tetap tersebar, tidak serentak.
+  const activateAllPlatforms = () => {
+    setPlatformFilter("all");
+    const remaining = platforms
+      .map((p) => p.id)
+      .filter((id) => !effectiveActivated.includes(id));
+    const waves: Platform[][] = [];
+    for (let i = 0; i < remaining.length; i += 3) {
+      waves.push(remaining.slice(i, i + 3));
+    }
+    waves.forEach((wave, idx) => {
+      if (idx === 0) {
+        setActivatedPlatforms((prev) => Array.from(new Set([...prev, ...wave])));
+      } else {
+        const timer = setTimeout(() => {
+          setActivatedPlatforms((prev) => Array.from(new Set([...prev, ...wave])));
+        }, idx * 700);
+        waveTimers.current.push(timer);
+      }
+    });
+  };
 
   const handleSearchClose = () => {
     setSearchOpen(false);
@@ -346,11 +387,14 @@ export function Header() {
                 </button>
               </div>
 
-              {/* Filter chips: Semua + platform yang punya hasil */}
+              {/* Chip platform (model klik-chip): platform yang belum dicari
+                  tampil polos — mengkliknya BARU menjalankan pencarian di
+                  platform itu. "Semua Platform" mengaktifkan sisanya
+                  secara bergelombang. */}
               {searching && (
                 <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 flex-shrink-0">
                   <button
-                    onClick={() => setPlatformFilter("all")}
+                    onClick={activateAllPlatforms}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                       platformFilter === "all"
                         ? "bg-primary/20 text-primary"
@@ -359,21 +403,39 @@ export function Header() {
                   >
                     Semua Platform
                   </button>
-                  {orderedGroups
-                    .filter((g) => g.items.length > 0)
-                    .map((g) => (
+                  {orderedGroups.map((g) => {
+                    const isActivated = effectiveActivated.includes(g.platform.id);
+                    return (
                       <button
                         key={g.platform.id}
-                        onClick={() => setPlatformFilter(g.platform.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                        onClick={() =>
+                          isActivated
+                            ? setPlatformFilter(g.platform.id)
+                            : activatePlatform(g.platform.id)
+                        }
+                        title={
+                          isActivated
+                            ? `Tampilkan hasil ${g.platform.name}`
+                            : `Cari juga di ${g.platform.name}`
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                           platformFilter === g.platform.id
                             ? "bg-primary/20 text-primary"
-                            : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                            : isActivated
+                              ? "bg-muted/50 text-muted-foreground hover:bg-muted"
+                              : "bg-transparent border border-dashed border-border text-muted-foreground hover:bg-muted/50"
                         }`}
                       >
-                        {g.platform.name} · {g.items.length}
+                        {g.platform.name}
+                        {isActivated &&
+                          (g.isLoading ? (
+                            <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <span>· {g.items.length}</span>
+                          ))}
                       </button>
-                    ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -385,7 +447,7 @@ export function Header() {
                     <p className="text-muted-foreground">
                       {fastQuery.length > 0
                         ? `Ketik minimal ${MIN_QUERY_LENGTH} huruf untuk mulai mencari`
-                        : "Ketik untuk mencari drama di semua platform sekaligus"}
+                        : `Ketik untuk mencari di ${platformInfo.name} — chip platform lain di atas memperluas pencarian ke semua platform`}
                     </p>
                   </div>
                 )}
@@ -393,7 +455,11 @@ export function Header() {
                 {searching && totalResults === 0 && anyLoading && (
                   <div className="flex flex-col items-center justify-center py-12 gap-3">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-muted-foreground">Mencari di semua platform…</p>
+                    <p className="text-sm text-muted-foreground">
+                      {allActivated
+                        ? "Mencari di semua platform…"
+                        : `Mencari di ${platformInfo.name}…`}
+                    </p>
                   </div>
                 )}
 
@@ -473,7 +539,7 @@ export function Header() {
 
                     {anyLoading && (
                       <p className="text-center text-xs text-muted-foreground">
-                        Masih mencari di platform lain…
+                        Masih mencari…
                       </p>
                     )}
                     {!anyLoading && anyError && (
@@ -487,16 +553,24 @@ export function Header() {
                 {searching && totalResults === 0 && !anyLoading && (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                      Tidak ada hasil untuk "{fastQuery}" di semua platform
-                      {anyError ? " — sebagian platform sedang tidak merespons" : ""}
+                      Tidak ada hasil untuk "{fastQuery}" di{" "}
+                      {allActivated ? "semua platform" : platformInfo.name}
+                      {anyError ? " — platform sedang tidak merespons" : ""}
                     </p>
+                    {!allActivated && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Klik chip platform lain atau "Semua Platform" di atas untuk
+                        memperluas pencarian.
+                      </p>
+                    )}
                   </div>
                 )}
 
                 {searching &&
                   platformFilter !== "all" &&
                   groupsWithResults.length === 0 &&
-                  totalResults > 0 && (
+                  totalResults > 0 &&
+                  !anyLoading && (
                     <div className="text-center py-12">
                       <p className="text-muted-foreground">
                         Tidak ada hasil di {getPlatformInfo(platformFilter).name} — coba chip
