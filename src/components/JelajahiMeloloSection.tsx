@@ -8,7 +8,6 @@ import { fetchJson } from "@/lib/fetcher";
 import {
   useMeloloTrending,
   useMeloloLatest,
-  useInfiniteMeloloDramas,
   type MeloloBook,
   type MeloloSearchResponse,
 } from "@/hooks/useMelolo";
@@ -79,9 +78,9 @@ export function JelajahiMeloloSection() {
 
   // Data seksi lain dipakai untuk dedup lintas seksi. Hook-hook ini berbagi
   // cache React Query dengan seksi aslinya, jadi tidak ada request tambahan.
+  // (Seksi "Lainnya" sudah dihapus — perannya digantikan seksi ini.)
   const { data: trendingData } = useMeloloTrending();
   const { data: latestData } = useMeloloLatest();
-  const { data: infiniteData } = useInfiniteMeloloDramas();
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -90,11 +89,8 @@ export function JelajahiMeloloSection() {
     const excluded = new Set<string>();
     trendingData?.books?.forEach((b) => b?.book_id && excluded.add(b.book_id));
     latestData?.books?.forEach((b) => b?.book_id && excluded.add(b.book_id));
-    infiniteData?.pages?.forEach((page) =>
-      page?.books?.forEach((b) => b?.book_id && excluded.add(b.book_id))
-    );
     return mergeInterleaved(perKeyword).filter((b) => !excluded.has(b.book_id));
-  }, [perKeyword, trendingData, latestData, infiniteData]);
+  }, [perKeyword, trendingData, latestData]);
 
   if (isLoading) {
     return (

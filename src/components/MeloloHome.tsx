@@ -4,7 +4,6 @@
 import { useMeloloLatest, useMeloloTrending } from "@/hooks/useMelolo";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
-import { InfiniteMeloloSection } from "./InfiniteMeloloSection";
 import { JelajahiMeloloSection } from "./JelajahiMeloloSection";
 
 function MeloloSectionSkeleton() {
@@ -105,10 +104,9 @@ export function MeloloHome() {
         </section>
       )}
 
-      {/* Infinite Scroll Section */}
-      <InfiniteMeloloSection title="Lainnya" />
-
-      {/* Jelajahi: katalog tambahan dari panen pencarian berkala (cache 1 jam) */}
+      {/* Jelajahi: katalog tambahan dari panen pencarian berkala (cache 1 jam).
+          Seksi "Lainnya" (feed foryou) dihapus 20 Okt 2026 atas permintaan Elnath
+          karena perannya sudah digantikan Jelajahi. */}
       <JelajahiMeloloSection />
 
       {!loadingLatest && !loadingTrending && !latestData?.books?.length && !trendingData?.books?.length && (
