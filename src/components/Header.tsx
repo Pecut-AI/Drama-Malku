@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,15 +22,15 @@ import { optimizeThumb } from "@/lib/image-utils";
 /**
  * Pencarian global model klik-chip (20 Okt 2026): satu kolom pencarian untuk
  * SEMUA platform, tetapi yang otomatis dicari hanya platform aktif. Platform
- * lain baru dicari saat chip-nya diklik pengguna; chip "Semua Platform"
- * mengaktifkan sisanya secara bergelombang (bertahap, bukan serentak).
+ * lain baru dicari saat chip-nya diklik pengguna; chip yang aktif selalu
+ * mengikuti platform yang sedang dipilih (chip "Semua Platform" dihapus atas
+ * permintaan Elnath — hasil ditampilkan per platform yang dipilih lewat chip).
  * Model ini dipilih Elnath agar beban ke API Sansekai (batas demo
  * ±10 request/menit, dibagi semua pengunjung) jauh lebih aman daripada
  * menelusuri semua platform setiap kali mengetik.
  *
- * Hasil dikelompokkan per platform; bentuk data pencarian tiap platform
- * berbeda-beda, jadi setiap platform punya adaptor kecil yang menormalkan
- * hasilnya ke GlobalSearchItem.
+ * Bentuk data pencarian tiap platform berbeda-beda, jadi setiap platform
+ * punya adaptor kecil yang menormalkan hasilnya ke GlobalSearchItem.
  */
 
 const MIN_QUERY_LENGTH = 3;
@@ -189,22 +189,23 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [platformModalOpen, setPlatformModalOpen] = useState(false);
-  const [platformFilter, setPlatformFilter] = useState<"all" | Platform>("all");
+  // Chip yang sedang aktif/terpilih di deretan chip pencarian. Selalu dimulai
+  // dari platform yang sedang dipilih saat ini (disinkronkan lewat effect di
+  // bawah); mengklik chip platform lain memindahkan pilihan ke chip itu.
+  const [selectedChip, setSelectedChip] = useState<Platform>("melolo");
   // Platform yang sudah diminta dicari untuk query saat ini (model klik-chip).
   // Platform aktif selalu termasuk; sisanya masuk hanya lewat klik chip.
   const [activatedPlatforms, setActivatedPlatforms] = useState<Platform[]>([]);
-  const waveTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const debouncedQuery = useDebounce(searchQuery, 400);
   const fastQuery = debouncedQuery.trim();
 
   // Platform context
-  const { currentPlatform, platformInfo, platforms, setPlatform, getPlatformInfo } = usePlatform();
+  const { currentPlatform, platformInfo, platforms, setPlatform } = usePlatform();
 
   const effectiveActivated: Platform[] = Array.from(
     new Set<Platform>([currentPlatform, ...activatedPlatforms])
   );
-  const allActivated = platforms.every((p) => effectiveActivated.includes(p.id));
 
   const queryFor = (id: Platform): string => {
     if (!effectiveActivated.includes(id)) return "";
@@ -252,49 +253,32 @@ export function Header() {
   ];
 
   const searching = fastQuery.length >= MIN_QUERY_LENGTH;
-  const anyLoading = groups.some((g) => g.isLoading);
-  const anyError = groups.some((g) => g.isError);
-  const totalResults = groups.reduce((sum, g) => sum + g.items.length, 0);
-  const visibleGroups = orderedGroups.filter(
-    (g) => platformFilter === "all" || g.platform.id === platformFilter
-  );
+  // Hasil yang ditampilkan hanya milik chip terpilih (satu platform).
+  const selectedGroup = groups.find((g) => g.platform.id === selectedChip);
+  const anyLoading = !!selectedGroup?.isLoading;
+  const anyError = !!selectedGroup?.isError;
+  const totalResults = selectedGroup?.items.length ?? 0;
+  const visibleGroups = selectedGroup ? [selectedGroup] : [];
   const groupsWithResults = visibleGroups.filter((g) => g.items.length > 0);
 
-  // Setiap query berubah: saringan kembali ke "Semua", aktivasi platform
-  // kembali hanya platform aktif, dan gelombang aktivasi lama dibatalkan.
+  // Chip aktif selalu mengikuti platform yang sedang dipilih saat pencarian
+  // dibuka atau platform berganti.
   useEffect(() => {
-    setPlatformFilter("all");
+    if (searchOpen) {
+      setSelectedChip(currentPlatform);
+    }
+  }, [searchOpen, currentPlatform]);
+
+  // Setiap query berubah: chip aktif kembali ke platform yang sedang dipilih
+  // dan aktivasi platform lain direset (belum dicari untuk kata yang baru).
+  useEffect(() => {
+    setSelectedChip(currentPlatform);
     setActivatedPlatforms([]);
-    waveTimers.current.forEach((t) => clearTimeout(t));
-    waveTimers.current = [];
-  }, [fastQuery]);
+  }, [fastQuery, currentPlatform]);
 
   const activatePlatform = (id: Platform) => {
     setActivatedPlatforms((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setPlatformFilter(id);
-  };
-
-  // "Semua Platform": aktifkan sisa platform bergelombang (3 per gelombang,
-  // jeda 700 milidetik) agar request ke API tetap tersebar, tidak serentak.
-  const activateAllPlatforms = () => {
-    setPlatformFilter("all");
-    const remaining = platforms
-      .map((p) => p.id)
-      .filter((id) => !effectiveActivated.includes(id));
-    const waves: Platform[][] = [];
-    for (let i = 0; i < remaining.length; i += 3) {
-      waves.push(remaining.slice(i, i + 3));
-    }
-    waves.forEach((wave, idx) => {
-      if (idx === 0) {
-        setActivatedPlatforms((prev) => Array.from(new Set([...prev, ...wave])));
-      } else {
-        const timer = setTimeout(() => {
-          setActivatedPlatforms((prev) => Array.from(new Set([...prev, ...wave])));
-        }, idx * 700);
-        waveTimers.current.push(timer);
-      }
-    });
+    setSelectedChip(id);
   };
 
   const handleSearchClose = () => {
@@ -387,22 +371,12 @@ export function Header() {
                 </button>
               </div>
 
-              {/* Chip platform (model klik-chip): platform yang belum dicari
+              {/* Chip platform (model klik-chip): chip aktif mengikuti
+                  platform yang sedang dipilih. Platform yang belum dicari
                   tampil polos — mengkliknya BARU menjalankan pencarian di
-                  platform itu. "Semua Platform" mengaktifkan sisanya
-                  secara bergelombang. */}
+                  platform itu sekaligus memindahkan chip aktif ke sana. */}
               {searching && (
                 <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 flex-shrink-0">
-                  <button
-                    onClick={activateAllPlatforms}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                      platformFilter === "all"
-                        ? "bg-primary/20 text-primary"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    Semua Platform
-                  </button>
                   {orderedGroups.map((g) => {
                     const isActivated = effectiveActivated.includes(g.platform.id);
                     return (
@@ -410,7 +384,7 @@ export function Header() {
                         key={g.platform.id}
                         onClick={() =>
                           isActivated
-                            ? setPlatformFilter(g.platform.id)
+                            ? setSelectedChip(g.platform.id)
                             : activatePlatform(g.platform.id)
                         }
                         title={
@@ -419,7 +393,7 @@ export function Header() {
                             : `Cari juga di ${g.platform.name}`
                         }
                         className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                          platformFilter === g.platform.id
+                          selectedChip === g.platform.id
                             ? "bg-primary/20 text-primary"
                             : isActivated
                               ? "bg-muted/50 text-muted-foreground hover:bg-muted"
@@ -447,7 +421,7 @@ export function Header() {
                     <p className="text-muted-foreground">
                       {fastQuery.length > 0
                         ? `Ketik minimal ${MIN_QUERY_LENGTH} huruf untuk mulai mencari`
-                        : `Ketik untuk mencari di ${platformInfo.name} — chip platform lain di atas memperluas pencarian ke semua platform`}
+                        : `Ketik untuk mencari di ${platformInfo.name} — klik chip platform lain untuk mencari di platform tersebut`}
                     </p>
                   </div>
                 )}
@@ -456,9 +430,7 @@ export function Header() {
                   <div className="flex flex-col items-center justify-center py-12 gap-3">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <p className="text-sm text-muted-foreground">
-                      {allActivated
-                        ? "Mencari di semua platform…"
-                        : `Mencari di ${platformInfo.name}…`}
+                      Mencari di {selectedGroup?.platform.name ?? platformInfo.name}…
                     </p>
                   </div>
                 )}
@@ -544,7 +516,7 @@ export function Header() {
                     )}
                     {!anyLoading && anyError && (
                       <p className="text-center text-xs text-muted-foreground">
-                        Sebagian platform tidak merespons, hasil mungkin tidak lengkap.
+                        Platform ini sempat tidak merespons, hasil mungkin tidak lengkap.
                       </p>
                     )}
                   </div>
@@ -554,30 +526,15 @@ export function Header() {
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
                       Tidak ada hasil untuk "{fastQuery}" di{" "}
-                      {allActivated ? "semua platform" : platformInfo.name}
+                      {selectedGroup?.platform.name ?? platformInfo.name}
                       {anyError ? " — platform sedang tidak merespons" : ""}
                     </p>
-                    {!allActivated && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Klik chip platform lain atau "Semua Platform" di atas untuk
-                        memperluas pencarian.
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Klik chip platform lain di atas untuk mencari di platform
+                      tersebut.
+                    </p>
                   </div>
                 )}
-
-                {searching &&
-                  platformFilter !== "all" &&
-                  groupsWithResults.length === 0 &&
-                  totalResults > 0 &&
-                  !anyLoading && (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">
-                        Tidak ada hasil di {getPlatformInfo(platformFilter).name} — coba chip
-                        "Semua Platform"
-                      </p>
-                    </div>
-                  )}
               </div>
             </div>
           </div>,
