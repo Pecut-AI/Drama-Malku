@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { optimizeCover } from "@/lib/image-utils";
+import { parseDetailLink, stashDramaMeta } from "@/lib/continue-watching";
 
 export interface BadgeConfig {
   text: string;
@@ -47,6 +48,14 @@ export function UnifiedMediaCard({
   return (
     <Link
       href={link}
+      onClick={() => {
+        // Simpan judul+poster untuk rak Lanjut Menonton (dipakai bila drama
+        // ini ditonton — halaman watch tidak membawa meta ini).
+        const parsed = parseDetailLink(link);
+        if (parsed) {
+          stashDramaMeta(parsed.platform, parsed.dramaId, { title, cover });
+        }
+      }}
       className="group relative block"
       style={{ animationDelay: `${index * 50}ms` }}
     >

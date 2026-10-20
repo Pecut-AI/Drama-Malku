@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Play, Flame } from "lucide-react";
 import { useReelShortHomepage } from "@/hooks/useReelShort";
-import { BannerCarousel } from "./BannerCarousel";
+import { HomeBannerCarousel } from "./HomeBannerCarousel";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteReelShortSection } from "./InfiniteReelShortSection";
@@ -54,7 +54,7 @@ export function ReelShortSection() {
   if (isLoading) {
     return (
       <div className="space-y-8">
-        <div className="aspect-[21/9] rounded-2xl bg-muted/50 animate-pulse" />
+        <div className="h-[270px] sm:h-[330px] lg:h-[390px] rounded-3xl bg-muted/50 animate-pulse" />
         {Array.from({ length: 3 }).map((_, i) => (
           <SectionSkeleton key={i} />
         ))}
@@ -66,8 +66,23 @@ export function ReelShortSection() {
 
   return (
     <div className="space-y-8">
-      {/* Banner Carousel */}
-      {banners.length > 0 && <BannerCarousel banners={banners} />}
+      {/* Banner Carousel — standar semua platform (20 Okt 2026),
+          menggantikan carousel pita tipis 3:1 lama */}
+      {banners.length > 0 && (
+        <HomeBannerCarousel
+          platformName="ReelShort"
+          items={banners.slice(0, 5).map((b) => ({
+            id: b.jump_param.book_id,
+            title: b.jump_param.book_title,
+            cover: b.pic,
+            poster: b.jump_param.book_pic,
+            href: `/detail/reelshort/${b.jump_param.book_id}`,
+            meta: b.jump_param.chapter_count
+              ? `${b.jump_param.chapter_count} Episode`
+              : undefined,
+          }))}
+        />
+      )}
 
       {/* Book Sections - Grid Layout */}
       {bookGroups.map((group, index) => (

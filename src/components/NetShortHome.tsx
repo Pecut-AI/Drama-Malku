@@ -5,6 +5,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { InfiniteNetShortSection } from "./InfiniteNetShortSection";
+import { HomeBannerCarousel } from "./HomeBannerCarousel";
 
 // ... existing emoji stripper ...
 function stripEmoji(text: string): string {
@@ -15,44 +16,19 @@ function stripEmoji(text: string): string {
 // Section names to exclude (causes 404)
 const EXCLUDED_SECTIONS = ['segera tayang', 'coming soon', 'upcoming'];
 
+function GridSkeleton({ count = 12 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
+      {Array.from({ length: count }).map((_, cardIndex) => (
+        <UnifiedMediaCardSkeleton key={cardIndex} index={cardIndex} />
+      ))}
+    </div>
+  );
+}
+
 export function NetShortHome() {
   const { data: theatersData, isLoading: loadingTheaters, error: errorTheaters, refetch: refetchTheaters } = useNetShortTheaters();
   const { data: forYouData, isLoading: loadingForYou, error: errorForYou, refetch: refetchForYou } = useNetShortForYou();
-
-  const isLoading = loadingTheaters || loadingForYou;
-
-  if (isLoading) {
-    return (
-      <div className="space-y-10">
-        {Array.from({ length: 3 }).map((_, sectionIndex) => (
-          <div key={sectionIndex}>
-            {/* Title Skeleton */}
-            <div className="h-7 w-48 bg-muted/50 rounded animate-pulse mb-4" />
-            
-            {/* Card Grid Skeleton */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-              {Array.from({ length: 12 }).map((_, cardIndex) => (
-                <UnifiedMediaCardSkeleton key={cardIndex} index={cardIndex} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (errorTheaters || errorForYou) {
-    return (
-      <UnifiedErrorDisplay 
-        title="Gagal Memuat NetShort"
-        message="Tidak dapat terhubung ke layanan NetShort."
-        onRetry={() => {
-            refetchTheaters();
-            refetchForYou();
-        }}
-      />
-    );
-  }
 
   // Filter out excluded sections
   const filteredGroups = (theatersData?.data || []).filter((group) => {
@@ -60,54 +36,43 @@ export function NetShortHome() {
     return !EXCLUDED_SECTIONS.some((excluded) => sectionName.includes(excluded));
   });
 
+  // Banner carousel standar dari 5 judul teratas Rekomendasi Untukmu
+  const bannerItems = (forYouData?.data || []).slice(0, 5).map((drama) => ({
+    id: drama.shortPlayId,
+    title: drama.title,
+    cover: drama.cover,
+    href: `/detail/netshort/${drama.shortPlayId}`,
+    meta: drama.totalEpisodes ? `${drama.totalEpisodes} Episode` : undefined,
+  }));
+
+  // Loading & error kini PER SEKSI (20 Okt 2026): satu seksi gagal tidak lagi
+  // mengosongkan seluruh beranda; tiap seksi punya tombol coba lagi sendiri.
   return (
     <div className="space-y-10">
-      {/* For You Section */}
-      {forYouData?.data && forYouData.data.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold font-display text-foreground">
-              Rekomendasi Untukmu
-            </h2>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-            {forYouData.data.map((drama, index) => (
-              <UnifiedMediaCard 
-                key={drama.shortPlayId} 
-                index={index}
-                title={drama.title}
-                cover={drama.cover}
-                link={`/detail/netshort/${drama.shortPlayId}`}
-                episodes={drama.totalEpisodes}
-                topLeftBadge={drama.scriptName ? {
-                  text: drama.scriptName,
-                  color: "#E52E2E"
-                } : null}
-                topRightBadge={drama.heatScore ? {
-                  text: drama.heatScore,
-                  isTransparent: true
-                } : null}
-              />
-            ))}
-          </div>
-        </section>
+      {bannerItems.length > 0 && (
+        <HomeBannerCarousel items={bannerItems} platformName="NetShort" />
       )}
 
-      {/* Theaters Sections */}
-      {filteredGroups.map((group) => (
-        <section key={group.groupId}>
-          {/* Section Header - removed "Lihat Semua" link */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold font-display text-foreground">
-              {stripEmoji(group.groupName)}
-            </h2>
-          </div>
-
-          {/* Drama Grid */}
+      {/* For You Section */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold font-display text-foreground">
+            Rekomendasi Untukmu
+          </h2>
+        </div>
+        {loadingForYou ? (
+          <GridSkeleton />
+        ) : errorForYou ? (
+          <UnifiedErrorDisplay
+            title="Gagal Memuat Rekomendasi"
+            message="Tidak dapat terhubung ke layanan NetShort."
+            onRetry={() => refetchForYou()}
+          />
+        ) : forYouData?.data && forYouData.data.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-            {group.dramas.slice(0, 12).map((drama, index) => (
-              <UnifiedMediaCard 
-                key={drama.shortPlayId} 
+            {forYouData.data.map((drama, index) => (
+              <UnifiedMediaCard
+                key={drama.shortPlayId}
                 index={index}
                 title={drama.title}
                 cover={drama.cover}
@@ -124,8 +89,57 @@ export function NetShortHome() {
               />
             ))}
           </div>
+        ) : null}
+      </section>
+
+      {/* Theaters Sections */}
+      {loadingTheaters ? (
+        <section>
+          <div className="h-7 w-48 bg-muted/50 rounded animate-pulse mb-4" />
+          <GridSkeleton />
         </section>
-      ))}
+      ) : errorTheaters ? (
+        <section>
+          <UnifiedErrorDisplay
+            title="Gagal Memuat Daftar Theater"
+            message="Tidak dapat terhubung ke layanan NetShort."
+            onRetry={() => refetchTheaters()}
+          />
+        </section>
+      ) : (
+        filteredGroups.map((group) => (
+          <section key={group.groupId}>
+            {/* Section Header - removed "Lihat Semua" link */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold font-display text-foreground">
+                {stripEmoji(group.groupName)}
+              </h2>
+            </div>
+
+            {/* Drama Grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
+              {group.dramas.slice(0, 12).map((drama, index) => (
+                <UnifiedMediaCard
+                  key={drama.shortPlayId}
+                  index={index}
+                  title={drama.title}
+                  cover={drama.cover}
+                  link={`/detail/netshort/${drama.shortPlayId}`}
+                  episodes={drama.totalEpisodes}
+                  topLeftBadge={drama.scriptName ? {
+                    text: drama.scriptName,
+                    color: "#E52E2E"
+                  } : null}
+                  topRightBadge={drama.heatScore ? {
+                    text: drama.heatScore,
+                    isTransparent: true
+                  } : null}
+                />
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       {/* Infinite Scroll Section */}
       <InfiniteNetShortSection title="Lainnya" />

@@ -15,6 +15,8 @@ import { PineDramaHome } from "@/components/PineDramaHome";
 import { useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/useDramas";
 import { usePlatform } from "@/hooks/usePlatform";
 import { InfiniteDramaSection } from "@/components/InfiniteDramaSection";
+import { ContinueWatchingShelf } from "@/components/ContinueWatchingShelf";
+import { HomeBannerCarousel } from "@/components/HomeBannerCarousel";
 
 export default function HomeContent() {
   const { isPineDrama, isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFreeReels, isDramaNova, isGoodShort, isFlickReels } = usePlatform();
@@ -28,6 +30,9 @@ export default function HomeContent() {
   return (
     <main className="min-h-screen pt-16">
 
+      {/* Lanjut Menonton — rak riwayat lokal, tampil bila ada */}
+      <ContinueWatchingShelf />
+
       {/* PineDrama Content */}
       {isPineDrama && (
         <div className="container mx-auto px-4 py-6 space-y-8">
@@ -38,6 +43,23 @@ export default function HomeContent() {
       {/* DramaBox Content - Multiple Sections */}
       {isDramaBox && (
         <div className="container mx-auto px-4 py-6 space-y-8">
+          {/* Banner carousel standar dari 5 judul teratas Terpopuler */}
+          {trendingDramas && trendingDramas.length > 0 && (
+            <HomeBannerCarousel
+              platformName="DramaBox"
+              items={trendingDramas
+                .filter((d) => d.cover || d.coverWap)
+                .slice(0, 5)
+                .map((d) => ({
+                  id: d.bookId,
+                  title: d.bookName,
+                  cover: d.cover || d.coverWap || "",
+                  href: `/detail/dramabox/${d.bookId}`,
+                  meta: d.chapterCount ? `${d.chapterCount} Episode` : undefined,
+                  description: d.introduction || undefined,
+                }))}
+            />
+          )}
           <DramaSection
             title="Terbaru"
             dramas={latestDramas}

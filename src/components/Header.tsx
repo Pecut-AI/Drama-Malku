@@ -18,6 +18,7 @@ import { usePlatform, type Platform, type PlatformInfo } from "@/hooks/usePlatfo
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
 import { optimizeThumb } from "@/lib/image-utils";
+import { parseDetailLink, stashDramaMeta } from "@/lib/continue-watching";
 
 /**
  * Pencarian global model klik-chip (20 Okt 2026): satu kolom pencarian untuk
@@ -286,7 +287,17 @@ export function Header() {
     setSearchQuery("");
   };
 
-  const handleResultClick = (groupPlatform: Platform) => {
+  const handleResultClick = (groupPlatform: Platform, item?: GlobalSearchItem) => {
+    // Simpan judul+poster untuk rak Lanjut Menonton.
+    if (item) {
+      const parsed = parseDetailLink(item.href);
+      if (parsed) {
+        stashDramaMeta(parsed.platform, parsed.dramaId, {
+          title: item.title,
+          cover: item.cover,
+        });
+      }
+    }
     // Samakan platform aktif dengan asal hasil agar konteks jelajah konsisten.
     if (groupPlatform !== currentPlatform) {
       setPlatform(groupPlatform);
@@ -464,7 +475,7 @@ export function Header() {
                             <Link
                               key={`${group.platform.id}-${item.id}`}
                               href={item.href}
-                              onClick={() => handleResultClick(group.platform.id)}
+                              onClick={() => handleResultClick(group.platform.id, item)}
                               className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                               style={{ animationDelay: `${index * 50}ms` }}
                             >

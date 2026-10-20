@@ -5,6 +5,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteShortMaxSection } from "./InfiniteShortMaxSection";
+import { HomeBannerCarousel } from "./HomeBannerCarousel";
 
 export function ShortMaxHome() {
   const {
@@ -16,6 +17,20 @@ export function ShortMaxHome() {
 
   return (
     <div className="space-y-10 animate-fade-in pb-12">
+      {/* Banner carousel standar dari 5 judul teratas Rekomendasi */}
+      {rekomendasiData?.data && rekomendasiData.data.length > 0 && (
+        <HomeBannerCarousel
+          platformName="ShortMax"
+          items={rekomendasiData.data.slice(0, 5).map((d) => ({
+            id: String(d.shortPlayId),
+            title: d.title,
+            cover: d.cover,
+            href: `/detail/shortmax/${d.shortPlayId}`,
+            meta: d.totalEpisodes ? `${d.totalEpisodes} Episode` : undefined,
+          }))}
+        />
+      )}
+
       {/* Rekomendasi Section */}
       <section>
         {errorRekomendasi || (!loadingRekomendasi && (!rekomendasiData?.data || rekomendasiData.data.length === 0)) ? (

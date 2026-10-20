@@ -5,6 +5,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteFlickReelsSection } from "./InfiniteFlickReelsSection";
+import { HomeBannerCarousel } from "./HomeBannerCarousel";
 
 export function FlickReelsHome() {
   const {
@@ -16,6 +17,20 @@ export function FlickReelsHome() {
 
   return (
     <div className="space-y-10 animate-fade-in pb-12">
+      {/* Banner carousel standar dari 5 judul teratas Terbaru */}
+      {latestData?.data && latestData.data.length > 0 && (
+        <HomeBannerCarousel
+          platformName="FlickReels"
+          items={latestData.data.slice(0, 5).map((d) => ({
+            id: String(d.playletId),
+            title: d.title,
+            cover: d.cover,
+            href: `/detail/flickreels/${d.playletId}`,
+            meta: d.totalEpisodes ? `${d.totalEpisodes} Episode` : undefined,
+          }))}
+        />
+      )}
+
       {/* Terbaru Section */}
       <section>
         {errorLatest || (!loadingLatest && (!latestData?.data || latestData.data.length === 0)) ? (

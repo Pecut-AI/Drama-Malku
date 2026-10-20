@@ -6,6 +6,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteFreeReelsSection } from "./InfiniteFreeReelsSection";
+import { HomeBannerCarousel } from "./HomeBannerCarousel";
 
 // Helper to extract items from a module, handling special cases like 'recommend'
 function getModuleItems(module: FreeReelsModule): FreeReelsItem[] {
@@ -59,23 +60,42 @@ export function FreeReelsHome() {
     refetch: refetchAnime 
   } = useFreeReelsAnime();
 
-  if (errorHome && errorAnime) {
-    return (
-      <UnifiedErrorDisplay 
-        onRetry={() => {
-          if (errorHome) refetchHome();
-          if (errorAnime) refetchAnime();
-        }} 
-      />
-    );
-  }
+  // Banner carousel standar dari modul beranda pertama yang berisi judul valid
+  const bannerItems = (() => {
+    const modules = homeData?.data?.items || [];
+    for (const mod of modules) {
+      if (mod.type === "coming_soon") continue;
+      const valid = getModuleItems(mod).filter((i) => i.title && i.cover);
+      if (valid.length > 0) {
+        return valid.slice(0, 5).map((item) => ({
+          id: item.key,
+          title: item.title,
+          cover: item.cover,
+          href: `/detail/freereels/${item.key}`,
+          meta: item.episode_count ? `${item.episode_count} Episode` : undefined,
+        }));
+      }
+    }
+    return [];
+  })();
 
+  // Error kini PER SEKSI (20 Okt 2026): modul beranda dan anime gagal sendiri-
+  // sendiri dengan tombol coba lagi masing-masing, bukan lagi layar penuh.
   return (
     <div className="space-y-8 pb-20">
-      
+      {bannerItems.length > 0 && (
+        <HomeBannerCarousel items={bannerItems} platformName="FreeReels" />
+      )}
+
       {/* SECTION: Homepage Modules */}
       {loadingHome ? (
         <SectionLoader count={6} titleWidth="w-40" />
+      ) : errorHome ? (
+        <UnifiedErrorDisplay
+          title="Gagal Memuat FreeReels"
+          message="Tidak dapat mengambil data beranda saat ini."
+          onRetry={() => refetchHome()}
+        />
       ) : (
         homeData?.data?.items
           ?.filter(module => module.type !== 'coming_soon')
@@ -117,6 +137,12 @@ export function FreeReelsHome() {
       {/* SECTION: Anime Modules */}
       {loadingAnime ? (
         <SectionLoader count={6} titleWidth="w-40" />
+      ) : errorAnime ? (
+        <UnifiedErrorDisplay
+          title="Gagal Memuat Anime"
+          message="Tidak dapat mengambil data anime saat ini."
+          onRetry={() => refetchAnime()}
+        />
       ) : (
         animeData?.data?.items && animeData.data.items.length > 0 && (
           <section className="space-y-4">
