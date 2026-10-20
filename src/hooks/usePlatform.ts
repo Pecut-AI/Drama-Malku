@@ -90,7 +90,7 @@ interface PlatformState {
 }
 
 export const usePlatformStore = create<PlatformState>((set) => ({
-  currentPlatform: "pinedrama",
+  currentPlatform: "melolo",
   setPlatform: (platform) => set({ currentPlatform: platform }),
 }));
 
