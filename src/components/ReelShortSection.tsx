@@ -64,24 +64,41 @@ export function ReelShortSection() {
 
   const { banners, bookGroups } = sections;
 
+  // Banner standar: pakai banner resmi homepage bila ada; bila upstream tidak
+  // mengirim banner (teramati 20 Okt 2026: tab Populer tanpa banner), cadangkan
+  // dari 5 judul teratas grup pertama agar ReelShort tetap ber-banner seperti
+  // platform lain.
+  const bannerItems =
+    banners.length > 0
+      ? banners.slice(0, 5).map((b) => ({
+          id: b.jump_param.book_id,
+          title: b.jump_param.book_title,
+          cover: b.pic,
+          poster: b.jump_param.book_pic,
+          href: `/detail/reelshort/${b.jump_param.book_id}`,
+          meta: b.jump_param.chapter_count
+            ? `${b.jump_param.chapter_count} Episode`
+            : undefined,
+        }))
+      : (bookGroups[0]?.books || [])
+          .filter((book) => book.book_id && book.book_pic)
+          .slice(0, 5)
+          .map((book) => ({
+            id: book.book_id,
+            title: book.book_title,
+            cover: book.book_pic,
+            href: `/detail/reelshort/${book.book_id}`,
+            meta: book.chapter_count
+              ? `${book.chapter_count} Episode`
+              : undefined,
+          }));
+
   return (
     <div className="space-y-8">
       {/* Banner Carousel — standar semua platform (20 Okt 2026),
           menggantikan carousel pita tipis 3:1 lama */}
-      {banners.length > 0 && (
-        <HomeBannerCarousel
-          platformName="ReelShort"
-          items={banners.slice(0, 5).map((b) => ({
-            id: b.jump_param.book_id,
-            title: b.jump_param.book_title,
-            cover: b.pic,
-            poster: b.jump_param.book_pic,
-            href: `/detail/reelshort/${b.jump_param.book_id}`,
-            meta: b.jump_param.chapter_count
-              ? `${b.jump_param.chapter_count} Episode`
-              : undefined,
-          }))}
-        />
+      {bannerItems.length > 0 && (
+        <HomeBannerCarousel platformName="ReelShort" items={bannerItems} />
       )}
 
       {/* Book Sections - Grid Layout */}
