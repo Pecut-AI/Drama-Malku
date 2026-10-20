@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  meloloStatusLabel,
   useMeloloLatest,
   useMeloloTrending,
   type MeloloBook,
@@ -35,7 +36,11 @@ function BookGrid({ books }: { books: MeloloBook[] }) {
           link={`/detail/melolo/${book.book_id}`}
           episodes={book.serial_count || 0}
           meta={book.stat_infos?.[0] || undefined}
-          topLeftBadge={null}
+          topLeftBadge={
+            meloloStatusLabel(book.book_status)
+              ? { text: meloloStatusLabel(book.book_status)!, color: "rgba(0,0,0,0.6)" }
+              : null
+          }
           index={index}
         />
       ))}

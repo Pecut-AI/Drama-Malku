@@ -7,6 +7,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { fetchJson } from "@/lib/fetcher";
 import {
+  meloloStatusLabel,
   useMeloloTrending,
   useMeloloLatest,
   type MeloloBook,
@@ -160,7 +161,11 @@ export function JelajahiMeloloSection() {
             link={`/detail/melolo/${book.book_id}`}
             episodes={book.serial_count || 0}
             meta={book.stat_infos?.[0] || undefined}
-            topLeftBadge={null}
+            topLeftBadge={
+              meloloStatusLabel(book.book_status)
+                ? { text: meloloStatusLabel(book.book_status)!, color: "rgba(0,0,0,0.6)" }
+                : null
+            }
           />
         ))}
       </div>

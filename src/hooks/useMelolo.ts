@@ -11,11 +11,18 @@ export interface MeloloBook {
   thumb_url: string;
   abstract?: string;
   author?: string;
-  book_status?: string; // "1" ?
+  book_status?: string; // "1" = berlanjut, "2" = tamat (konvensi API Melolo)
   category_info?: string; // JSON string
   stat_infos?: string[];
   serial_count?: number;
   [key: string]: any;
+}
+
+/** Label status serial Melolo untuk badge kartu: "1" → Berlanjut, "2" → Tamat. */
+export function meloloStatusLabel(bookStatus?: string): string | undefined {
+  if (bookStatus === "1") return "Berlanjut";
+  if (bookStatus === "2") return "Tamat";
+  return undefined;
 }
 
 export interface MeloloResponse {
