@@ -6,6 +6,7 @@ import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteShortMaxSection } from "./InfiniteShortMaxSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 
 export function ShortMaxHome() {
   const {
@@ -30,6 +31,8 @@ export function ShortMaxHome() {
           }))}
         />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* Rekomendasi Section */}
       <section>

@@ -3,6 +3,7 @@
 import { PineDramaSection } from "./PineDramaSection";
 import { InfinitePineDramaSection } from "./InfinitePineDramaSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 import { usePineDramaTrending } from "@/hooks/usePineDrama";
 
 export function PineDramaHome() {
@@ -29,6 +30,9 @@ export function PineDramaHome() {
           }))}
         />
       )}
+
+      <ContinueWatchingShelf />
+
       <PineDramaSection
         title="Trending"
         dramas={trendingData}

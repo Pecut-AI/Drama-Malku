@@ -72,7 +72,6 @@ export function ContinueWatchingShelf() {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-6">
     <section className="animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-bold text-xl md:text-2xl text-foreground">
@@ -165,6 +164,5 @@ export function ContinueWatchingShelf() {
         })}
       </div>
     </section>
-    </div>
   );
 }

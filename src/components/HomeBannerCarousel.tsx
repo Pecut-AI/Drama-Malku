@@ -118,7 +118,7 @@ export function HomeBannerCarousel({
 
             {/* Konten */}
             <div className="absolute inset-0 z-20 flex items-center gap-4 sm:gap-6 p-5 sm:p-8 pointer-events-none">
-              <div className="relative w-24 sm:w-32 lg:w-36 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shrink-0 hidden min-[400px]:block">
+              <div className="relative w-[76px] min-[400px]:w-24 sm:w-32 lg:w-36 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shrink-0">
                 <Image
                   src={optimizeCover(item.poster || item.cover)}
                   alt={item.title}
@@ -143,15 +143,15 @@ export function HomeBannerCarousel({
                     )}
                   </div>
                 )}
-                <h3 className="font-display font-bold text-white text-xl sm:text-3xl lg:text-4xl leading-tight line-clamp-2 drop-shadow">
+                <h3 className="font-display font-bold text-white text-lg sm:text-3xl lg:text-4xl leading-tight line-clamp-2 drop-shadow">
                   {item.title}
                 </h3>
                 {item.description && (
-                  <p className="hidden md:block text-sm text-white/75 line-clamp-2 mt-3">
+                  <p className="text-xs sm:text-sm text-white/75 line-clamp-3 sm:line-clamp-2 mt-2 sm:mt-3">
                     {item.description}
                   </p>
                 )}
-                <span className="inline-flex items-center gap-2 mt-3 sm:mt-5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-primary text-white text-xs sm:text-sm font-semibold shadow-lg">
+                <span className="hidden sm:inline-flex items-center gap-2 mt-3 sm:mt-5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-primary text-white text-xs sm:text-sm font-semibold shadow-lg">
                   <Play className="w-4 h-4 fill-white" />
                   Tonton Sekarang
                 </span>

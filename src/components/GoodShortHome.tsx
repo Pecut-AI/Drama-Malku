@@ -3,6 +3,7 @@
 import { GoodShortSection } from "./GoodShortSection";
 import { InfiniteGoodShortSection } from "./InfiniteGoodShortSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 import { useGoodShortLatest, useGoodShortTrending } from "@/hooks/useGoodShort";
 
 export function GoodShortHome() {
@@ -36,6 +37,9 @@ export function GoodShortHome() {
           }))}
         />
       )}
+
+      <ContinueWatchingShelf />
+
       <GoodShortSection
         title="Terbaru"
         dramas={latestData}

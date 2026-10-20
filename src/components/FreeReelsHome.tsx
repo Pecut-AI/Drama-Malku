@@ -7,6 +7,7 @@ import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteFreeReelsSection } from "./InfiniteFreeReelsSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 
 // Helper to extract items from a module, handling special cases like 'recommend'
 function getModuleItems(module: FreeReelsModule): FreeReelsItem[] {
@@ -86,6 +87,8 @@ export function FreeReelsHome() {
       {bannerItems.length > 0 && (
         <HomeBannerCarousel items={bannerItems} platformName="FreeReels" />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* SECTION: Homepage Modules */}
       {loadingHome ? (

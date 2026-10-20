@@ -6,6 +6,7 @@ import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { InfiniteNetShortSection } from "./InfiniteNetShortSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 
 // ... existing emoji stripper ...
 function stripEmoji(text: string): string {
@@ -52,6 +53,8 @@ export function NetShortHome() {
       {bannerItems.length > 0 && (
         <HomeBannerCarousel items={bannerItems} platformName="NetShort" />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* For You Section */}
       <section>

@@ -30,9 +30,6 @@ export default function HomeContent() {
   return (
     <main className="min-h-screen pt-16">
 
-      {/* Lanjut Menonton — rak riwayat lokal, tampil bila ada */}
-      <ContinueWatchingShelf />
-
       {/* PineDrama Content */}
       {isPineDrama && (
         <div className="container mx-auto px-4 py-6 space-y-8">
@@ -60,6 +57,10 @@ export default function HomeContent() {
                 }))}
             />
           )}
+
+          {/* Lanjut Menonton — di bawah banner (permintaan Elnath 20 Okt) */}
+          <ContinueWatchingShelf />
+
           <DramaSection
             title="Terbaru"
             dramas={latestDramas}

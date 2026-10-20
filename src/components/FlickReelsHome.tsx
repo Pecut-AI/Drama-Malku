@@ -6,6 +6,7 @@ import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteFlickReelsSection } from "./InfiniteFlickReelsSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 
 export function FlickReelsHome() {
   const {
@@ -30,6 +31,8 @@ export function FlickReelsHome() {
           }))}
         />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* Terbaru Section */}
       <section>

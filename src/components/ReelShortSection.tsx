@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Play, Flame } from "lucide-react";
 import { useReelShortHomepage } from "@/hooks/useReelShort";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { InfiniteReelShortSection } from "./InfiniteReelShortSection";
@@ -100,6 +101,8 @@ export function ReelShortSection() {
       {bannerItems.length > 0 && (
         <HomeBannerCarousel platformName="ReelShort" items={bannerItems} />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* Book Sections - Grid Layout */}
       {bookGroups.map((group, index) => (

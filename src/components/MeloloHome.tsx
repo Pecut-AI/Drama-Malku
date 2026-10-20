@@ -9,6 +9,7 @@ import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { JelajahiMeloloSection } from "./JelajahiMeloloSection";
 import { HomeBannerCarousel } from "./HomeBannerCarousel";
+import { ContinueWatchingShelf } from "./ContinueWatchingShelf";
 
 function MeloloGridSkeleton() {
   return (
@@ -76,6 +77,8 @@ export function MeloloHome() {
       {bannerItems.length > 0 && (
         <HomeBannerCarousel items={bannerItems} platformName="Melolo" />
       )}
+
+      <ContinueWatchingShelf />
 
       {/* Trending Section */}
       <section>
