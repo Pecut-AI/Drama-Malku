@@ -44,6 +44,7 @@ export function NetShortHome() {
     cover: drama.cover,
     href: `/detail/netshort/${drama.shortPlayId}`,
     meta: drama.totalEpisodes ? `${drama.totalEpisodes} Episode` : undefined,
+    tags: drama.labels?.slice(0, 3),
   }));
 
   // Loading & error kini PER SEKSI (20 Okt 2026): satu seksi gagal tidak lagi
@@ -51,7 +52,7 @@ export function NetShortHome() {
   return (
     <div className="space-y-10">
       {bannerItems.length > 0 && (
-        <HomeBannerCarousel items={bannerItems} platformName="NetShort" />
+        <HomeBannerCarousel items={bannerItems} platformName="NetShort" platform="netshort" />
       )}
 
       <ContinueWatchingShelf />

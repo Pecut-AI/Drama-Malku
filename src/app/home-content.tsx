@@ -54,6 +54,7 @@ export default function HomeContent() {
                   href: `/detail/dramabox/${d.bookId}`,
                   meta: d.chapterCount ? `${d.chapterCount} Episode` : undefined,
                   description: d.introduction || undefined,
+                  tags: d.tagNames?.slice(0, 3),
                 }))}
             />
           )}

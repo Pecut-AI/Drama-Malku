@@ -22,12 +22,14 @@ export function ShortMaxHome() {
       {rekomendasiData?.data && rekomendasiData.data.length > 0 && (
         <HomeBannerCarousel
           platformName="ShortMax"
+          platform="shortmax"
           items={rekomendasiData.data.slice(0, 5).map((d) => ({
             id: String(d.shortPlayId),
             title: d.title,
             cover: d.cover,
             href: `/detail/shortmax/${d.shortPlayId}`,
             meta: d.totalEpisodes ? `${d.totalEpisodes} Episode` : undefined,
+            tags: d.label ? [d.label] : undefined,
           }))}
         />
       )}

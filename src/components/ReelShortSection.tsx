@@ -80,6 +80,7 @@ export function ReelShortSection() {
           meta: b.jump_param.chapter_count
             ? `${b.jump_param.chapter_count} Episode`
             : undefined,
+          tags: b.jump_param.book_theme?.slice(0, 3),
         }))
       : (bookGroups[0]?.books || [])
           .filter((book) => book.book_id && book.book_pic)
@@ -99,7 +100,7 @@ export function ReelShortSection() {
       {/* Banner Carousel — standar semua platform (20 Okt 2026),
           menggantikan carousel pita tipis 3:1 lama */}
       {bannerItems.length > 0 && (
-        <HomeBannerCarousel platformName="ReelShort" items={bannerItems} />
+        <HomeBannerCarousel platformName="ReelShort" platform="reelshort" items={bannerItems} />
       )}
 
       <ContinueWatchingShelf />

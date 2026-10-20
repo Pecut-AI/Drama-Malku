@@ -34,6 +34,7 @@ export function GoodShortHome() {
             href: `/detail/goodshort/${d.bookId}`,
             meta: d.chapterCount ? `${d.chapterCount} Episode` : undefined,
             description: d.introduction || undefined,
+            tags: d.typeTwoNames?.slice(0, 3),
           }))}
         />
       )}

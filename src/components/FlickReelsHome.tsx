@@ -22,12 +22,14 @@ export function FlickReelsHome() {
       {latestData?.data && latestData.data.length > 0 && (
         <HomeBannerCarousel
           platformName="FlickReels"
+          platform="flickreels"
           items={latestData.data.slice(0, 5).map((d) => ({
             id: String(d.playletId),
             title: d.title,
             cover: d.cover,
             href: `/detail/flickreels/${d.playletId}`,
             meta: d.totalEpisodes ? `${d.totalEpisodes} Episode` : undefined,
+            tags: d.tags?.slice(0, 3),
           }))}
         />
       )}

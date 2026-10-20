@@ -27,6 +27,7 @@ export function PineDramaHome() {
             href: `/detail/pinedrama/${d.collection_id}`,
             meta: d.total_episodes ? `${d.total_episodes} Episode` : undefined,
             description: d.description || undefined,
+            tags: d.tags?.slice(0, 3),
           }))}
         />
       )}

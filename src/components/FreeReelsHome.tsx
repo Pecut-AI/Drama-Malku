@@ -74,6 +74,8 @@ export function FreeReelsHome() {
           cover: item.cover,
           href: `/detail/freereels/${item.key}`,
           meta: item.episode_count ? `${item.episode_count} Episode` : undefined,
+          description: item.desc || undefined,
+          tags: item.content_tags?.slice(0, 3),
         }));
       }
     }
