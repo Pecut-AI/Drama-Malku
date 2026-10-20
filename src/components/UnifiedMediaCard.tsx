@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { optimizeCover } from "@/lib/image-utils";
@@ -50,13 +52,7 @@ export function UnifiedMediaCard({
     >
       {/* Visual Container */}
       <div className="aspect-[2/3] relative overflow-hidden rounded-xl bg-muted/20">
-        <img
-          src={optimizeCover(cover)}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-        />
+        <Image src={optimizeCover(cover)} alt={title} fill sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 220px" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" referrerPolicy="no-referrer" />
 
         {/* Gradient Overlay */}
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />

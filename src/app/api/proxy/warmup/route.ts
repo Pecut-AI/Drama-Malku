@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 // Custom agent to ignore SSL issues
 const agent = new https.Agent({
-  rejectUnauthorized: false
+  rejectUnauthorized: true
 });
 
 // Helper: Make a request with redirect handling
@@ -29,7 +29,7 @@ function fetchHead(url: string, redirectCount = 5): Promise<{ statusCode: number
         "Range": "bytes=0-0" // Request just the first byte
       },
       agent: isHttp ? undefined : agent,
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
       timeout: 8000,
     };
 

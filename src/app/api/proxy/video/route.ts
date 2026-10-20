@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'; // Prevent static optimization
 
 // Custom agent to ignore SSL issues
 const agent = new https.Agent({
-  rejectUnauthorized: false
+  rejectUnauthorized: true
 });
 
 // Helper: Fetch stream with redirect handling
@@ -20,7 +20,7 @@ function fetchStream(url: string, headers: any, redirectCount = 5): Promise<{ re
     const options = {
         headers: headers,
         agent: isHttp ? undefined : agent,
-        rejectUnauthorized: false, 
+        rejectUnauthorized: true, 
         method: 'GET'
     };
 

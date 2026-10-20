@@ -1,4 +1,4 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
 import { extractMeloloBooks } from "../utils";
 
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
     const currentOffset = parseInt(offsetStr, 10) || 0;
     
     // Melolo uses offset-based pagination
-    const response = await fetch(`${UPSTREAM_API}/foryou?offset=${currentOffset}`, {
-      cache: 'no-store',
+    const response = await fetchWithRetry(`${UPSTREAM_API}/foryou?offset=${currentOffset}`, {
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {

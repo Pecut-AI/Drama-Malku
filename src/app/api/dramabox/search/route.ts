@@ -1,4 +1,4 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 
 const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/dramabox";
@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${UPSTREAM_API}/search?query=${encodeURIComponent(query)}`,
-      { cache: 'no-store',}
+      { next: { revalidate: 60 },}
     );
 
     if (!response.ok) {

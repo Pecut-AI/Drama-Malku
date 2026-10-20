@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { Play, ChevronLeft } from "lucide-react";
@@ -68,11 +70,7 @@ export default function ReelShortDetailPage() {
       <div className="relative">
         {/* Background Blur */}
         <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={optimizeBg(data.cover)}
-            alt=""
-            className="w-full h-full object-cover opacity-20 blur-3xl scale-110"
-          />
+          <Image src={optimizeBg(data.cover)} alt="" fill sizes="100vw" className="w-full h-full object-cover opacity-20 blur-3xl scale-110" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
         </div>
 
@@ -89,11 +87,7 @@ export default function ReelShortDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
             {/* Cover */}
             <div className="relative group">
-              <img
-                src={optimizePoster(data.cover)}
-                alt={data.title}
-                className="w-full max-w-[300px] mx-auto rounded-2xl shadow-2xl"
-              />
+              <Image src={optimizePoster(data.cover)} alt={data.title} width={600} height={900} sizes="(max-width: 768px) 80vw, 300px" className="w-full max-w-[300px] mx-auto rounded-2xl shadow-2xl h-auto" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
                 <button
                   onClick={() => {

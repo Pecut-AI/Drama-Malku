@@ -1,4 +1,4 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 import { optimizeCover } from "@/lib/image-utils";
 import { NextRequest } from "next/server";
 
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${UPSTREAM_API}/detail?shortPlayId=${shortPlayId}`, {
-      cache: 'no-store',
+    const response = await fetchWithRetry(`${UPSTREAM_API}/detail?shortPlayId=${shortPlayId}`, {
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {

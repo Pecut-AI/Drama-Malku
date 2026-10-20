@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
@@ -46,11 +48,7 @@ export function BannerCarousel({
     >
       {/* Banner Image */}
       <Link href={`/detail/reelshort/${currentBanner.jump_param.book_id}`}>
-        <img
-          src={optimizeBanner(currentBanner.pic)}
-          alt={currentBanner.jump_param.book_title}
-          className="w-full h-full object-cover transition-transform duration-700"
-        />
+        <Image src={optimizeBanner(currentBanner.pic)} alt={currentBanner.jump_param.book_title} width={1600} height={533} priority className="w-full h-full object-cover transition-transform duration-700" />
 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
@@ -60,11 +58,7 @@ export function BannerCarousel({
         <div className="absolute bottom-6 left-6 right-20 space-y-3">
           {/* Artistic Title */}
           {currentBanner.pic_artistic_word && (
-            <img
-              src={optimizeBanner(currentBanner.pic_artistic_word)}
-              alt=""
-              className="h-12 md:h-16 object-contain"
-            />
+            <Image src={optimizeBanner(currentBanner.pic_artistic_word)} alt="" width={256} height={64} className="h-12 md:h-16 object-contain w-auto" />
           )}
 
           <h3 className="text-lg md:text-xl font-bold text-white line-clamp-1">

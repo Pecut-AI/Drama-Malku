@@ -9,7 +9,7 @@ function fetchBuffer(url: string, redirectCount = 5): Promise<{ buffer: Buffer; 
     if (redirectCount <= 0) return reject(new Error("Too many redirects"));
     const isHttp = url.startsWith("http:");
     const mod = isHttp ? require("http") : require("https");
-    const agent = isHttp ? undefined : new (require("https").Agent)({ rejectUnauthorized: false });
+    const agent = isHttp ? undefined : new (require("https").Agent)({ rejectUnauthorized: true });
     const req = mod.request(url, {
       method: 'GET',
       agent,

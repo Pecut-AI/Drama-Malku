@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { encryptedResponse } from "@/lib/api-utils";
+import { encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -10,13 +10,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api"}/freereels/search?query=${encodeURIComponent(query)}`, {
+    const res = await fetchWithRetry(`${process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api"}/freereels/search?query=${encodeURIComponent(query)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         // Add any necessary headers here
       },
-      next: { revalidate: 0 } // Don't cache search results
+      next: { revalidate: 60 } // Cache pencarian identik 60 detik (Evolusi P1, hemat kuota upstream)
     });
 
     if (!res.ok) {

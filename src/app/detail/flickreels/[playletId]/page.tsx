@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
 import { useFlickReelsDetail } from "@/hooks/useFlickReels";
 import { Play, ChevronLeft } from "lucide-react";
@@ -39,7 +41,7 @@ export default function FlickReelsDetailPage() {
     <main className="min-h-screen pt-20">
       <div className="relative">
         <div className="absolute inset-0 overflow-hidden">
-          <img src={optimizeBg(data.cover)} alt="" className="w-full h-full object-cover opacity-20 blur-3xl scale-110" />
+          <Image src={optimizeBg(data.cover)} alt="" fill sizes="100vw" className="w-full h-full object-cover opacity-20 blur-3xl scale-110" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
         </div>
 
@@ -51,7 +53,7 @@ export default function FlickReelsDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
             <div className="relative group">
-              <img src={optimizePoster(data.cover)} alt={data.title} className="w-full max-w-[300px] mx-auto rounded-2xl shadow-2xl" />
+              <Image src={optimizePoster(data.cover)} alt={data.title} width={600} height={900} sizes="(max-width: 768px) 80vw, 300px" className="w-full max-w-[300px] mx-auto rounded-2xl shadow-2xl h-auto" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
                 <button onClick={handleWatch} className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg">
                   <Play className="w-5 h-5 fill-current" />

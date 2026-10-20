@@ -6,9 +6,9 @@ const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sanse
 
 export const dynamic = 'force-dynamic';
 
-// Custom agent to ignore SSL issues
+// Agent HTTPS dengan verifikasi sertifikat AKTIF (Evolusi P2: sebelumnya verifikasi dimatikan)
 const agent = new https.Agent({
-  rejectUnauthorized: false
+  rejectUnauthorized: true
 });
 
 // Helper: Fetch stream with redirect handling
@@ -22,7 +22,7 @@ function fetchStream(url: string, headers: Record<string, string>, redirectCount
     const options = {
       headers: headers,
       agent: isHttp ? undefined : agent,
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
       method: 'GET'
     };
 

@@ -1,12 +1,12 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 import { NextResponse } from "next/server";
 
 const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
 
 export async function GET() {
   try {
-    const response = await fetch(`${UPSTREAM_API}/theaters`, {
-      cache: 'no-store',
+    const response = await fetchWithRetry(`${UPSTREAM_API}/theaters`, {
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {

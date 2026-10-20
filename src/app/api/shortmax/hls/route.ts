@@ -52,7 +52,7 @@ function decryptSegment(buf: Buffer): Buffer {
 }
 
 // ── Fetch with redirect support ─────────────────────────────────
-const agent = new https.Agent({ rejectUnauthorized: false });
+const agent = new https.Agent({ rejectUnauthorized: true });
 
 function fetchBuffer(url: string, redirectCount = 5): Promise<{ buffer: Buffer; finalUrl: string }> {
   return new Promise((resolve, reject) => {

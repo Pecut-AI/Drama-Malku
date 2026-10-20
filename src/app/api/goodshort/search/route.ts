@@ -1,4 +1,4 @@
-import { encryptedResponse } from "@/lib/api-utils";
+import { encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
 
 const UPSTREAM_API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api";
 
@@ -10,7 +10,8 @@ export async function GET(request: Request) {
     const targetUrl = new URL(`${UPSTREAM_API}/goodshort/search`);
     targetUrl.searchParams.set("query", query);
 
-    const res = await fetch(targetUrl.toString(), {
+    const res = await fetchWithRetry(targetUrl.toString(), {
+      next: { revalidate: 60 },
       headers: {
         "User-Agent": "okhttp/4.12.0",
       },

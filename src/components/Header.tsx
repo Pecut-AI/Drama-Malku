@@ -221,13 +221,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.cover)}
-                          alt={drama.bookName}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.cover)} alt={drama.bookName} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.bookName}</h3>
                           {drama.protagonist && (
@@ -262,13 +256,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(book.book_pic)}
-                          alt={book.book_title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(book.book_pic)} alt={book.book_title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{book.book_title}</h3>
                           <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
@@ -311,13 +299,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.cover)}
-                          alt={drama.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.cover)} alt={drama.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
                           {drama.description && (
@@ -356,13 +338,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.cover)}
-                          alt={drama.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.cover)} alt={drama.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
                           {drama.genre && drama.genre.length > 0 && (
@@ -393,13 +369,7 @@ export function Header() {
                       >
                         <div className="w-16 h-24 bg-muted rounded-xl flex-shrink-0 overflow-hidden">
                           {book.thumb_url ? (
-                            <img
-                              src={optimizeThumb(book.thumb_url)}
-                              alt={book.book_name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              referrerPolicy="no-referrer"
-                            />
+                            <Image src={optimizeThumb(book.thumb_url)} alt={book.book_name} width={128} height={192} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-muted">
                               <span className="text-xs text-muted-foreground">No Img</span>
@@ -439,13 +409,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(book.cover)}
-                          alt={book.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(book.cover)} alt={book.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{book.title}</h3>
                           {book.desc && (
@@ -479,13 +443,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.posterImgUrl)}
-                          alt={drama.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.posterImgUrl)} alt={drama.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
                           {drama.description && (
@@ -519,13 +477,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(book.cover)}
-                          alt={book.bookName}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(book.cover)} alt={book.bookName} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{book.bookName}</h3>
                           {book.introduction && (
@@ -564,13 +516,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.cover)}
-                          alt={drama.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.cover)} alt={drama.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
                           {drama.description && (
@@ -604,13 +550,7 @@ export function Header() {
                         className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <img
-                          src={optimizeThumb(drama.cover)}
-                          alt={drama.title}
-                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Image src={optimizeThumb(drama.cover)} alt={drama.title} width={128} height={192} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
                           {drama.description && (
