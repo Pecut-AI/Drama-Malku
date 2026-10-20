@@ -105,12 +105,15 @@ export function HomeBannerCarousel({
 
   const count = items.length;
 
-  // Lebar satu langkah geser = lebar slide pertama + celah antar slide (12px)
+  // Lebar satu langkah geser = jarak antar awal slide (robust untuk semua
+  // ukuran layar: HP tanpa celah, layar lebih besar dengan peek + celah 12px)
   const stepWidth = useCallback(() => {
     const track = trackRef.current;
     if (!track) return 0;
-    const first = track.children[0] as HTMLElement | undefined;
-    return first ? first.offsetWidth + 12 : track.clientWidth;
+    const a = track.children[0] as HTMLElement | undefined;
+    const b = track.children[1] as HTMLElement | undefined;
+    if (a && b) return b.offsetLeft - a.offsetLeft;
+    return a ? a.offsetWidth : track.clientWidth;
   }, []);
 
   const scrollToIndex = useCallback(
@@ -170,12 +173,12 @@ export function HomeBannerCarousel({
         onScroll={handleScroll}
         onPointerDown={pauseTemporarily}
         onWheel={pauseTemporarily}
-        className="flex gap-3 h-full overflow-x-auto snap-x snap-mandatory scroll-smooth px-[7%] lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-0 sm:gap-3 h-full overflow-x-auto snap-x snap-mandatory scroll-smooth px-0 sm:px-[7%] lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, i) => (
           <div
             key={item.id}
-            className="relative min-w-[86%] lg:min-w-full h-full snap-center rounded-2xl overflow-hidden"
+            className="relative min-w-full sm:min-w-[86%] lg:min-w-full h-full snap-center rounded-none sm:rounded-2xl overflow-hidden"
           >
             {/* Gambar penuh memenuhi bingkai */}
             <Image
@@ -248,7 +251,7 @@ export function HomeBannerCarousel({
               pauseTemporarily();
               scrollToIndex(active - 1);
             }}
-            className="flex absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 items-center justify-center text-white hover:bg-black/65 transition"
+            className="hidden sm:flex absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 items-center justify-center text-white hover:bg-black/65 transition"
             aria-label="Banner sebelumnya"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -258,7 +261,7 @@ export function HomeBannerCarousel({
               pauseTemporarily();
               scrollToIndex(active + 1);
             }}
-            className="flex absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 items-center justify-center text-white hover:bg-black/65 transition"
+            className="hidden sm:flex absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 items-center justify-center text-white hover:bg-black/65 transition"
             aria-label="Banner berikutnya"
           >
             <ChevronRight className="w-5 h-5" />
