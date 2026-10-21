@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { AlertTriangle, Loader2, RotateCcw } from "lucide-react";
+import { AlertTriangle, Loader2, RotateCcw, X } from "lucide-react";
 
 const MAX_AUTO_RETRY = 3;
 const BACKOFF_MS = [2000, 5000, 10000];
@@ -26,7 +26,12 @@ type Status =
 export function WatchPlayerResilience() {
   const pathname = usePathname();
   const [status, setStatus] = useState<Status>(null);
+  const [dismissed, setDismissed] = useState(false);
   const reloadRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    setDismissed(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!pathname || !pathname.startsWith("/watch/")) return;
@@ -166,6 +171,17 @@ export function WatchPlayerResilience() {
       }
     }, 1000);
 
+    // Sebagian halaman (mis. Melolo) tidak merender elemen <video> sama
+    // sekali bila sumber gagal didapat — hanya teks "Video unavailable"
+    // tanpa jalan keluar. Bila setelah 15 detik tetap tidak ada video,
+    // tampilkan kartu gagal dengan tombol muat ulang halaman.
+    const noVideoTimer = window.setTimeout(() => {
+      if (disposed) return;
+      if (!video && !document.querySelector("video")) {
+        setStatus((s) => s ?? { kind: "failed" });
+      }
+    }, 15000);
+
     reloadRef.current = () => {
       attempts = 0;
       stallSince = null;
@@ -181,6 +197,7 @@ export function WatchPlayerResilience() {
     return () => {
       disposed = true;
       window.clearInterval(poll);
+      window.clearTimeout(noVideoTimer);
       window.clearInterval(watchdog);
       clearRetry();
       detach();
@@ -188,7 +205,7 @@ export function WatchPlayerResilience() {
     };
   }, [pathname]);
 
-  if (!status) return null;
+  if (!status || dismissed) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-24 z-[90] flex justify-center px-4 pointer-events-none">
@@ -205,7 +222,7 @@ export function WatchPlayerResilience() {
           <>
             <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
             <p className="text-white text-xs md:text-sm flex-1">
-              Video belum bisa dimuat — sumbernya sedang bermasalah. Posisi tontonanmu sudah disimpan.
+              Video belum bisa dimuat — sumbernya sedang bermasalah.
             </p>
             <button
               onClick={() => reloadRef.current()}
@@ -213,6 +230,13 @@ export function WatchPlayerResilience() {
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Coba Lagi
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              aria-label="Tutup pemberitahuan"
+              className="p-1.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
             </button>
           </>
         )}
