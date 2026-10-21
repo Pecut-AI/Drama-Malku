@@ -8,8 +8,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Hls from "hls.js";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
-import { useAutoNext } from "@/lib/use-auto-next";
-import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 export default function FreeReelsWatchPage() {
   const params = useParams();
@@ -282,16 +280,6 @@ export default function FreeReelsWatchPage() {
        router.replace(`/watch/freereels/${bookId}?t=${newToken}`);
     }
   };
-  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
-  // lompatan seketika saat video berakhir.
-  const autoNext = useAutoNext(handleVideoEnded);
-  const handleEnded = () => {
-    if (currentEpisodeIndex + 1 < totalEpisodes) autoNext.start();
-  };
-  useEffect(() => {
-    autoNext.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentToken]);
 
 
   if (isLoading) {
@@ -385,7 +373,7 @@ export default function FreeReelsWatchPage() {
                 autoPlay
                 className="w-full h-full object-contain max-h-[100dvh]"
                 poster={drama.cover}
-                onEnded={handleEnded}
+                onEnded={handleVideoEnded}
                 {...({ disableRemotePlayback: true, referrerPolicy: "no-referrer" } as any)}
                 crossOrigin="anonymous"
               >
@@ -464,7 +452,6 @@ export default function FreeReelsWatchPage() {
           </div>
         </>
       )}
-      <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
     </div>
   );
 }

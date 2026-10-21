@@ -13,8 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
-import { useAutoNext } from "@/lib/use-auto-next";
-import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 
 interface VideoQuality {
@@ -170,16 +168,6 @@ export default function GoodShortWatchPage() {
       handleEpisodeChange(currentEpisodeIndex + 1);
     }
   }, [currentEpisodeIndex, totalEpisodes, handleEpisodeChange]);
-  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
-  // lompatan seketika saat video berakhir.
-  const autoNext = useAutoNext(handleVideoEnded);
-  const handleEnded = () => {
-    if (currentEpisodeIndex < totalEpisodes - 1) autoNext.start();
-  };
-  useEffect(() => {
-    autoNext.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentToken]);
 
 
   // Guard: no data after loading
@@ -258,7 +246,7 @@ export default function GoodShortWatchPage() {
             controls
             autoPlay
             playsInline
-            onEnded={handleEnded}
+            onEnded={handleVideoEnded}
             className="w-full h-full object-contain max-h-[100dvh]"
           />
 
@@ -338,7 +326,6 @@ export default function GoodShortWatchPage() {
           </div>
         </>
       )}
-          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
 </main>
   );
 }

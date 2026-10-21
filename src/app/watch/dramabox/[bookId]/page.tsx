@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { DramaDetailDirect, DramaDetailResponseLegacy } from "@/types/drama";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
-import { useAutoNext } from "@/lib/use-auto-next";
-import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 // Helper to check if response is new format
 function isDirectFormat(data: unknown): data is DramaDetailDirect {
@@ -154,16 +152,6 @@ export default function DramaBoxWatchPage() {
       handleEpisodeChange(next, true);
     }
   };
-  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
-  // lompatan seketika saat video berakhir.
-  const autoNext = useAutoNext(handleVideoEnded);
-  const handleEnded = () => {
-    if (!!episodes && currentEpisode + 1 <= episodes.length - 1) autoNext.start();
-  };
-  useEffect(() => {
-    autoNext.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentToken]);
 
 
   // Manual Subtitle Injection & Enforcement (same as FreeReels/NetShort)
@@ -340,7 +328,7 @@ export default function DramaBoxWatchPage() {
                 src={videoUrl}
                 controls
                 autoPlay
-                onEnded={handleEnded}
+                onEnded={handleVideoEnded}
                 className="w-full h-full object-contain max-h-[100dvh]"
                 poster={currentEpisodeData.chapterImg}
               />
@@ -420,7 +408,6 @@ export default function DramaBoxWatchPage() {
           </div>
         </>
       )}
-          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
 </main>
   );
 }

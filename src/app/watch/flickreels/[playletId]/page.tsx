@@ -7,8 +7,6 @@ import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Hls from "hls.js";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
-import { useAutoNext } from "@/lib/use-auto-next";
-import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 export default function FlickReelsWatchPage() {
   const params = useParams<{ playletId: string }>();
@@ -46,16 +44,6 @@ export default function FlickReelsWatchPage() {
       window.history.replaceState(null, '', `/watch/flickreels/${playletId}?t=${newToken}`);
     }
   }, [currentEpisode, totalEpisodes, playletId, currentToken]);
-  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
-  // lompatan seketika saat video berakhir.
-  const autoNext = useAutoNext(handleVideoEnded);
-  const handleEnded = () => {
-    if (currentEpisode + 1 <= totalEpisodes) autoNext.start();
-  };
-  useEffect(() => {
-    autoNext.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentToken]);
 
 
   useEffect(() => {
@@ -128,7 +116,7 @@ export default function FlickReelsWatchPage() {
               <button onClick={() => router.refresh()} className="px-4 py-2 bg-primary text-white rounded-lg text-sm">Coba Lagi</button>
             </div>
           )}
-          <video ref={videoRef} className="w-full h-full object-contain max-h-[100dvh]" controls playsInline autoPlay crossOrigin="anonymous" {...({ disableRemotePlayback: true, referrerPolicy: "no-referrer" } as any)} onEnded={handleEnded} />
+          <video ref={videoRef} className="w-full h-full object-contain max-h-[100dvh]" controls playsInline autoPlay crossOrigin="anonymous" {...({ disableRemotePlayback: true, referrerPolicy: "no-referrer" } as any)} onEnded={handleVideoEnded} />
         </div>
 
         <div className="absolute bottom-20 md:bottom-12 left-0 right-0 z-40 pointer-events-none flex justify-center pb-safe-area-bottom">
@@ -167,7 +155,6 @@ export default function FlickReelsWatchPage() {
           </div>
         </>
       )}
-          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
 </main>
   );
 }
