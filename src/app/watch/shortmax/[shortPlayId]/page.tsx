@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
+import { useAutoNext } from "@/lib/use-auto-next";
+import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 export default function ShortMaxWatchPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -80,6 +82,17 @@ export default function ShortMaxWatchPage() {
       window.history.replaceState(null, '', `/watch/shortmax/${shortPlayId}?t=${newToken}`);
     }
   }, [currentEpisode, totalEpisodes, shortPlayId, currentToken]);
+  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
+  // lompatan seketika saat video berakhir.
+  const autoNext = useAutoNext(handleVideoEnded);
+  const handleEnded = () => {
+    if (currentEpisode + 1 <= totalEpisodes) autoNext.start();
+  };
+  useEffect(() => {
+    autoNext.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentToken]);
+
 
   // Load video with HLS.js
   useEffect(() => {
@@ -234,7 +247,7 @@ export default function ShortMaxWatchPage() {
               autoPlay
               crossOrigin="anonymous"
               {...({ disableRemotePlayback: true, referrerPolicy: "no-referrer" } as any)}
-              onEnded={handleVideoEnded}
+              onEnded={handleEnded}
             />
          </div>
 
@@ -306,6 +319,7 @@ export default function ShortMaxWatchPage() {
           </div>
         </>
       )}
-    </main>
+          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
+</main>
   );
 }

@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { optimizeCover } from "@/lib/image-utils";
+import { PosterImage } from "./PosterImage";
 import { fetchJson } from "@/lib/fetcher";
 
 export interface BannerItem {
@@ -181,14 +180,12 @@ export function HomeBannerCarousel({
             className="relative min-w-full sm:min-w-[86%] lg:min-w-full h-full snap-center rounded-none sm:rounded-2xl overflow-hidden"
           >
             {/* Gambar penuh memenuhi bingkai */}
-            <Image
-              src={optimizeCover(item.cover)}
+            <PosterImage
+              src={item.cover}
               alt={item.title}
-              fill
               sizes="(max-width: 1024px) 86vw, 100vw"
               priority={i === 0}
               className="object-cover object-[center_22%]"
-              referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/10" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-transparent" />

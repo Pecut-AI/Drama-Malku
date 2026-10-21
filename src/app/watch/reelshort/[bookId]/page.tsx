@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
+import { useAutoNext } from "@/lib/use-auto-next";
+import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 interface VideoItem {
   url: string;
@@ -196,6 +198,17 @@ export default function ReelShortWatchPage() {
       window.history.replaceState(null, '', `/watch/reelshort/${bookId}?t=${newToken}`);
     }
   }, [currentEpisode, detailData?.totalEpisodes, bookId, currentToken]);
+  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
+  // lompatan seketika saat video berakhir.
+  const autoNext = useAutoNext(handleVideoEnded);
+  const handleEnded = () => {
+    if (currentEpisode < (detailData?.totalEpisodes || 1)) autoNext.start();
+  };
+  useEffect(() => {
+    autoNext.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentToken]);
+
 
   const goToEpisode = (ep: number) => {
     if (!currentToken) return;
@@ -313,7 +326,7 @@ export default function ReelShortWatchPage() {
               controls
               playsInline
               autoPlay
-              onEnded={handleVideoEnded}
+              onEnded={handleEnded}
             />
          </div>
 
@@ -386,6 +399,7 @@ export default function ReelShortWatchPage() {
           </div>
         </>
       )}
-    </main>
+          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
+</main>
   );
 }

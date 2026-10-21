@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Hls from "hls.js";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
+import { useAutoNext } from "@/lib/use-auto-next";
+import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 export default function NetShortWatchPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -57,6 +59,17 @@ export default function NetShortWatchPage() {
       window.history.replaceState(null, '', `/watch/netshort/${shortPlayId}?t=${newToken}`);
     }
   }, [currentEpisode, totalEpisodes, shortPlayId, currentToken]);
+  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
+  // lompatan seketika saat video berakhir.
+  const autoNext = useAutoNext(handleVideoEnded);
+  const handleEnded = () => {
+    if (currentEpisode + 1 <= totalEpisodes) autoNext.start();
+  };
+  useEffect(() => {
+    autoNext.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentToken]);
+
 
   // Load video with fallback support for MP4/HLS
   useEffect(() => {
@@ -285,7 +298,7 @@ export default function NetShortWatchPage() {
               autoPlay
               crossOrigin="anonymous"
               {...({ disableRemotePlayback: true, referrerPolicy: "no-referrer" } as any)}
-              onEnded={handleVideoEnded}
+              onEnded={handleEnded}
             />
          </div>
 
@@ -357,6 +370,7 @@ export default function NetShortWatchPage() {
           </div>
         </>
       )}
-    </main>
+          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
+</main>
   );
 }

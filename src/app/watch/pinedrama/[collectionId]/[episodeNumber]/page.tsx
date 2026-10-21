@@ -6,6 +6,8 @@ import { usePineDramaDetail, usePineDramaEpisode } from "@/hooks/usePineDrama";
 import { ChevronLeft, ChevronRight, Loader2, List, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getWatchSession, updateWatchSession } from "@/lib/watch-session";
+import { useAutoNext } from "@/lib/use-auto-next";
+import { AutoNextOverlay } from "@/components/AutoNextOverlay";
 
 export default function PineDramaWatchPage() {
   const params = useParams<{ collectionId: string; episodeNumber: string }>();
@@ -106,6 +108,17 @@ export default function PineDramaWatchPage() {
       handleEpisodeChange(currentEpisode + 1);
     }
   }, [currentEpisode, totalEpisodes, handleEpisodeChange]);
+  // Hitung mundur episode berikutnya (bisa dibatalkan) — menggantikan
+  // lompatan seketika saat video berakhir.
+  const autoNext = useAutoNext(handleVideoEnded);
+  const handleEnded = () => {
+    if (currentEpisode < totalEpisodes) autoNext.start();
+  };
+  useEffect(() => {
+    autoNext.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentToken]);
+
 
   // Guard: no data after loading
   if (!episodeLoading && !episodeData && !detailData) {
@@ -162,7 +175,7 @@ export default function PineDramaWatchPage() {
             controls
             autoPlay
             playsInline
-            onEnded={handleVideoEnded}
+            onEnded={handleEnded}
             className="w-full h-full object-contain max-h-[100dvh]"
           />
 
@@ -263,6 +276,7 @@ export default function PineDramaWatchPage() {
           </div>
         </>
       )}
-    </main>
+          <AutoNextOverlay countdown={autoNext.countdown} onPlayNow={autoNext.playNow} onCancel={autoNext.cancel} />
+</main>
   );
 }

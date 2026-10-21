@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Play, X, Trash2 } from "lucide-react";
+import { PosterImage } from "./PosterImage";
 import { createWatchToken } from "@/lib/watch-session";
 import { PLATFORMS } from "@/hooks/usePlatform";
-import { optimizeCover } from "@/lib/image-utils";
 import {
   CW_UPDATED_EVENT,
   buildResumeWatchUrl,
@@ -110,22 +109,12 @@ export function ContinueWatchingShelf() {
                 title={`Lanjutkan ${entry.title}`}
               >
                 <div className="aspect-[2/3] relative overflow-hidden rounded-xl bg-muted/20">
-                  {entry.cover ? (
-                    <Image
-                      src={optimizeCover(entry.cover)}
-                      alt={entry.title}
-                      fill
-                      sizes="160px"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted/40 p-2">
-                      <span className="text-[10px] text-muted-foreground text-center line-clamp-3">
-                        {entry.title}
-                      </span>
-                    </div>
-                  )}
+                  <PosterImage
+                    src={entry.cover}
+                    alt={entry.title}
+                    sizes="160px"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center shadow-lg opacity-90 group-hover:scale-110 transition-transform">
