@@ -40,6 +40,7 @@ export function WatchPlayerResilience() {
     let disposed = false;
     let attempts = 0;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let escalationTimer: ReturnType<typeof setTimeout> | null = null;
     let retryArmedAt = 0;
     let lastAdvanceAt = Date.now();
     let lastTime = 0;
@@ -49,6 +50,13 @@ export function WatchPlayerResilience() {
       if (retryTimer) {
         clearTimeout(retryTimer);
         retryTimer = null;
+      }
+    };
+
+    const clearEscalation = () => {
+      if (escalationTimer) {
+        clearTimeout(escalationTimer);
+        escalationTimer = null;
       }
     };
 
@@ -79,13 +87,28 @@ export function WatchPlayerResilience() {
         // autoplay bisa ditolak; pengguna dapat menekan play manual
       });
       retryArmedAt = Date.now();
+      // Eskalasi: bila 7 detik setelah retry video tetap tidak berputar,
+      // perlakukan sebagai kegagalan berikutnya (tanpa ini, error yang
+      // datang cepat setelah load() tertelan jeda pengaman dan retry
+      // berhenti di percobaan 1 selamanya).
+      clearEscalation();
+      escalationTimer = setTimeout(() => {
+        if (disposed || !video) return;
+        if (!video.paused && video.readyState >= 3) return;
+        if (video.readyState >= 3 && video.currentTime > 0) return;
+        retryArmedAt = 0;
+        handleFailure();
+      }, 7000);
     };
 
     const handleFailure = () => {
       if (disposed || !video) return;
       if (document.visibilityState !== "visible") return;
-      // Beri jeda setelah retry sebelum kegagalan berikutnya dihitung
-      if (Date.now() - retryArmedAt < 3000) return;
+      // Jeda singkat setelah load() agar error ganda untuk sumber yang
+      // sama tidak terhitung dua kali; retry yang sudah terjadwal juga
+      // tidak perlu digandakan.
+      if (Date.now() - retryArmedAt < 1200) return;
+      if (retryTimer) return;
 
       if (!isDirectSource()) {
         // MSE/HLS: jangan ganggu pemulihan internal hls.js; tampilkan status
@@ -121,6 +144,7 @@ export function WatchPlayerResilience() {
       stallSince = null;
       lastAdvanceAt = Date.now();
       clearRetry();
+      clearEscalation();
       setStatus(null);
     };
 
@@ -173,14 +197,16 @@ export function WatchPlayerResilience() {
 
     // Sebagian halaman (mis. Melolo) tidak merender elemen <video> sama
     // sekali bila sumber gagal didapat — hanya teks "Video unavailable"
-    // tanpa jalan keluar. Bila setelah 15 detik tetap tidak ada video,
-    // tampilkan kartu gagal dengan tombol muat ulang halaman.
+    // tanpa jalan keluar. Bila setelah 25 detik tetap tidak ada video,
+    // tampilkan kartu gagal dengan tombol muat ulang halaman. (Ambang
+    // dilonggarkan dari 15 detik: pemuatan data DramaBox yang lambat
+    // terbukti bisa melewati 15 detik lalu berhasil berputar.)
     const noVideoTimer = window.setTimeout(() => {
       if (disposed) return;
       if (!video && !document.querySelector("video")) {
         setStatus((s) => s ?? { kind: "failed" });
       }
-    }, 15000);
+    }, 25000);
 
     reloadRef.current = () => {
       attempts = 0;
@@ -200,6 +226,7 @@ export function WatchPlayerResilience() {
       window.clearTimeout(noVideoTimer);
       window.clearInterval(watchdog);
       clearRetry();
+      clearEscalation();
       detach();
       setStatus(null);
     };
