@@ -93,6 +93,7 @@ export function WatchPlayerResilience() {
       // berhenti di percobaan 1 selamanya).
       clearEscalation();
       escalationTimer = setTimeout(() => {
+        escalationTimer = null;
         if (disposed || !video) return;
         if (!video.paused && video.readyState >= 3) return;
         if (video.readyState >= 3 && video.currentTime > 0) return;
@@ -129,7 +130,10 @@ export function WatchPlayerResilience() {
       attempts += 1;
       setStatus({ kind: "recovering", attempt: attempts });
       clearRetry();
-      retryTimer = setTimeout(doRetry, BACKOFF_MS[attempts - 1] ?? 5000);
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        doRetry();
+      }, BACKOFF_MS[attempts - 1] ?? 5000);
     };
 
     const onError = () => {
