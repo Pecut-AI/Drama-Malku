@@ -1,36 +1,34 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { dlHome, type DlItem } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/shortmax";
+export const dynamic = "force-dynamic";
+
+function mapShort(item: DlItem) {
+  return {
+    shortPlayId: parseInt(item.id, 10) || 0,
+    title: item.title,
+    cover: item.cover || item.poster,
+    totalEpisodes: item.totalEpisodes || 0,
+    label: (item.tags || [])[0] || "",
+    collectNum: 0,
+    playNum: item.heat || 0,
+    summary: "",
+  };
+}
 
 export async function GET() {
   try {
-    const response = await fetchWithRetry(`${UPSTREAM_API}/rekomendasi`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse({ success: false, data: [] });
-    }
-
-    const data = await safeJson<any>(response);
-
-    const dramas = (data.results || []).map((item: any) => ({
-      shortPlayId: item.shortPlayId,
-      title: item.name,
-      cover: optimizeCover(item.cover),
-      totalEpisodes: item.totalEpisodes || 0,
-      label: item.label || "",
-      collectNum: item.collectNum || 0,
-    }));
-
-    return encryptedResponse({
-      success: true,
-      data: dramas,
-      total: data.total || dramas.length,
-    });
+    const sections = await dlHome("shortmax");
+    const items = (sections || []).flatMap((s) => s.items || []);
+    // dedup per id
+    const seen = new Set<string>();
+    const dramas = items
+      .filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)))
+      .map(mapShort);
+    return encryptedResponse({ success: true, data: dramas, total: dramas.length });
   } catch (error) {
-    console.error("ShortMax Rekomendasi Error:", error);
+    console.error("ShortMax Rekomendasi (dramaletto) Error:", error);
     return encryptedResponse({ success: false, data: [] });
   }
 }

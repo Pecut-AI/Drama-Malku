@@ -1,50 +1,37 @@
+// Stream proxy GoodShort versi dramaletto (sejak 23 Okt 2026).
+// Parameter ?url= berisi penanda "dramaletto:<bookId>:<episodeNo>" dari
+// /api/goodshort/allepisode. Episode GoodShort di dramaletto ternyata
+// berupa playlist HLS — dikembalikan apa adanya setelah segmennya
+// ditulis ulang lewat proxy DramaMalku (/api/dramaletto/proxy).
 import { NextRequest, NextResponse } from "next/server";
+import { dlRewrittenPlaylist } from "@/lib/dramaletto";
 
-const UPSTREAM_API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
     const url = req.nextUrl.searchParams.get("url");
-
     if (!url) {
       return new NextResponse("url parameter is required", { status: 400 });
     }
-
-    const targetUrl = `${UPSTREAM_API}/goodshort/decrypt-stream?url=${encodeURIComponent(url)}`;
-
-    const res = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": "okhttp/4.12.0",
-      },
-    });
-
-    if (!res.ok) {
-      return new NextResponse(`Upstream error: ${res.status}`, { status: res.status });
+    const m = /^dramaletto:([^:]+):(\d+)$/.exec(url);
+    if (!m) {
+      return new NextResponse("format url tidak dikenal", { status: 400 });
     }
-
-    const contentType = res.headers.get("content-type") || "application/vnd.apple.mpegurl";
-    let body = await res.text();
-
-    // Rewrite segment URLs in the m3u8 to go through our proxy
-    // Replace direct CDN URLs and decrypt-ts URLs with our local proxy
-    body = body.replace(
-      /^(https?:\/\/.+)$/gm,
-      (match) => {
-        // Proxy all segment URLs through our ts-proxy endpoint
-        return `/api/goodshort/ts-proxy?url=${encodeURIComponent(match)}`;
-      }
-    );
-
-    return new NextResponse(body, {
+    const playlist = await dlRewrittenPlaylist("goodshort", m[1], parseInt(m[2], 10));
+    if (!playlist) {
+      return new NextResponse("playlist tidak tersedia", { status: 502 });
+    }
+    return new NextResponse(playlist, {
       status: 200,
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "application/vnd.apple.mpegurl",
         "Access-Control-Allow-Origin": "*",
         "Cache-Control": "no-cache",
       },
     });
   } catch (error) {
-    console.error("GoodShort stream proxy error:", error);
+    console.error("GoodShort stream proxy (dramaletto) error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

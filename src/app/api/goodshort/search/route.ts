@@ -1,30 +1,32 @@
-import { encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { dlSearch } from "@/lib/dramaletto";
+import { gsItem } from "@/lib/goodshort-shape";
 
-const UPSTREAM_API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || "";
-
-    const targetUrl = new URL(`${UPSTREAM_API}/goodshort/search`);
-    targetUrl.searchParams.set("query", query);
-
-    const res = await fetchWithRetry(targetUrl.toString(), {
-      next: { revalidate: 60 },
-      headers: {
-        "User-Agent": "okhttp/4.12.0",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch goodshort search: ${res.status}`);
+    if (!query) {
+      return encryptedResponse({
+        data: { searchResult: { records: [] } },
+        status: 200,
+        message: "success",
+        success: true,
+      });
     }
-
-    const data = await res.json();
-    return encryptedResponse(data);
+    const items = await dlSearch("goodshort", query);
+    return encryptedResponse({
+      data: { searchResult: { records: (items || []).map(gsItem) } },
+      status: 200,
+      message: "success",
+      success: true,
+      timestamp: Date.now(),
+    });
   } catch (error) {
-    console.error("GoodShort search fetch error:", error);
+    console.error("GoodShort Search (dramaletto) Error:", error);
     return encryptedResponse(
       { status: 500, message: "Failed to fetch search from GoodShort", data: null },
       500

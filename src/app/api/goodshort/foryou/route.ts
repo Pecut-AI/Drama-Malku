@@ -1,27 +1,21 @@
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
 import { NextRequest } from "next/server";
-import { encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
+import { encryptedResponse } from "@/lib/api-utils";
+import { dlBrowse } from "@/lib/dramaletto";
+import { gsRankPayload } from "@/lib/goodshort-shape";
 
-const UPSTREAM_API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const page = req.nextUrl.searchParams.get("page") || "1";
-
-    const res = await fetchWithRetry(`${UPSTREAM_API}/goodshort/foryou?page=${page}`, {
-      next: { revalidate: 300 },
-      headers: {
-        "User-Agent": "okhttp/4.12.0",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch goodshort foryou: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return encryptedResponse(data);
+    const page = parseInt(req.nextUrl.searchParams.get("page") || "1", 10);
+    const items = await dlBrowse("goodshort", page);
+    const hasMore = (items || []).length > 0;
+    return encryptedResponse(
+      gsRankPayload("Untuk Kamu", items || [], page, hasMore ? page + 1 : page)
+    );
   } catch (error) {
-    console.error("GoodShort foryou fetch error:", error);
+    console.error("GoodShort ForYou (dramaletto) Error:", error);
     return encryptedResponse(
       { status: 500, message: "Failed to fetch from GoodShort", data: null },
       500

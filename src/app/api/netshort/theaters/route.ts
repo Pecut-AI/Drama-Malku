@@ -1,44 +1,34 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { NextResponse } from "next/server";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { dlHome, type DlItem } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
+export const dynamic = "force-dynamic";
+
+function mapDrama(item: DlItem) {
+  return {
+    shortPlayId: item.id,
+    shortPlayLibraryId: item.id,
+    title: item.title,
+    cover: item.cover || item.poster,
+    labels: item.tags || [],
+    heatScore: item.heat ? String(item.heat) : "",
+    scriptName: undefined,
+    totalEpisodes: item.totalEpisodes || 0,
+  };
+}
 
 export async function GET() {
   try {
-    const response = await fetchWithRetry(`${UPSTREAM_API}/theaters`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse({ success: false, data: [] });
-    }
-
-    const data = await safeJson<any>(response);
-    
-    // Normalize the response to match our format
-    // Each group has contentName (section title) and contentInfos (dramas)
-    const normalizedGroups = (data || []).map((group: any) => ({
-      groupId: group.groupId,
-      groupName: group.contentName,
-      contentRemark: group.contentRemark,
-      dramas: (group.contentInfos || []).map((item: any) => ({
-        shortPlayId: item.shortPlayId,
-        shortPlayLibraryId: item.shortPlayLibraryId,
-        title: item.shortPlayName,
-        cover: item.shortPlayCover || item.groupShortPlayCover,
-        labels: item.labelArray || [],
-        heatScore: item.heatScoreShow || "",
-        scriptName: item.scriptName,
-        totalEpisodes: item.totalEpisode || 0,
-      })),
+    const sections = await dlHome("netshort");
+    const groups = (sections || []).map((s) => ({
+      groupId: s.id,
+      groupName: s.title,
+      contentRemark: "",
+      dramas: (s.items || []).map(mapDrama),
     }));
-
-    return encryptedResponse({
-      success: true,
-      data: normalizedGroups,
-    });
+    return encryptedResponse({ success: true, data: groups });
   } catch (error) {
-    console.error("NetShort Theaters Error:", error);
+    console.error("NetShort Theaters (dramaletto) Error:", error);
     return encryptedResponse({ success: false, data: [] });
   }
 }

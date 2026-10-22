@@ -1,46 +1,28 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlSearch } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/flickreels";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("query");
-
+    const query = request.nextUrl.searchParams.get("query");
     if (!query || !query.trim()) {
       return encryptedResponse({ success: true, data: [] });
     }
-
-    const response = await fetchWithRetry(
-      `${UPSTREAM_API}/search?query=${encodeURIComponent(query)}`,
-      { next: { revalidate: 60 } }
-    );
-
-    if (!response.ok) {
-      return encryptedResponse({ success: true, data: [], total: 0 });
-    }
-
-    const data = await safeJson<any>(response);
-    const items = Array.isArray(data?.data) ? data.data : [];
-
-    const results = items.map((item: any) => ({
-      playletId: item.playlet_id,
+    const items = await dlSearch("flickreels", query);
+    const results = (items || []).map((item) => ({
+      playletId: parseInt(item.id, 10) || 0,
       title: item.title,
-      cover: optimizeCover(item.cover),
-      totalEpisodes: item.upload_num || 0,
-      tags: (item.tag_list || []).map((t: any) => t.tag_name),
-      description: item.introduce || "",
+      cover: item.cover || item.poster,
+      totalEpisodes: item.totalEpisodes || 0,
+      tags: item.tags || [],
+      description: "",
     }));
-
-    return encryptedResponse({
-      success: true,
-      data: results,
-      total: results.length,
-    });
+    return encryptedResponse({ success: true, data: results, total: results.length });
   } catch (error) {
-    console.error("FlickReels Search Error:", error);
+    console.error("FlickReels Search (dramaletto) Error:", error);
     return encryptedResponse({ success: true, data: [], total: 0 });
   }
 }

@@ -1,56 +1,35 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlTitle } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/flickreels";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const playletId = searchParams.get("playletId");
-
+    const playletId = request.nextUrl.searchParams.get("playletId");
     if (!playletId) {
-      return encryptedResponse(
-        { success: false, error: "playletId is required" },
-        400
-      );
+      return encryptedResponse({ success: false, error: "playletId is required" }, 400);
     }
-
-    const response = await fetchWithRetry(`${UPSTREAM_API}/detail?playlet_id=${playletId}`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse(
-        { success: false, error: "Failed to fetch detail" }
-      );
-    }
-
-    const raw = await safeJson<any>(response);
-    const data = raw.data || raw;
-    const drama = data.drama || {};
-    const episodes = Array.isArray(data.episodes) ? data.episodes : [];
-
+    const data = await dlTitle("flickreels", playletId);
     return encryptedResponse({
       success: true,
-      playletId: playletId,
-      title: drama.title,
-      cover: optimizeCover(drama.cover),
-      description: drama.description || "",
-      totalEpisodes: drama.chapterCount || episodes.length,
-      labels: drama.labels || [],
-      episodes: episodes.map((ep: any) => ({
-        id: ep.id,
-        name: ep.name,
-        num: ep.num,
-        unlock: ep.unlock,
-        duration: ep.raw?.duration || 0,
+      playletId: data.id,
+      title: data.title,
+      cover: data.cover,
+      description: data.synopsis || "",
+      totalEpisodes: data.totalEpisodes,
+      labels: data.tags || [],
+      episodes: (data.episodes || []).map((ep) => ({
+        id: ep.episodeId,
+        name: `Episode ${ep.episodeNo}`,
+        num: ep.episodeNo,
+        unlock: !ep.isLocked,
+        duration: ep.duration || 0,
       })),
     });
   } catch (error) {
-    console.error("FlickReels Detail Error:", error);
-    return encryptedResponse(
-      { success: false, error: "Internal server error" }
-    );
+    console.error("FlickReels Detail (dramaletto) Error:", error);
+    return encryptedResponse({ success: false, error: "Internal server error" });
   }
 }

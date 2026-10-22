@@ -1,64 +1,43 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+// Upstream: dramaletto.com — tiket stream diminta server-side, video
+// dialirkan lewat proxy DramaMalku (/api/dramaletto/proxy?mode=video).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlTicket, dlProxyUrl } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const shortPlayId = searchParams.get("shortPlayId");
-    const episodeNumber = searchParams.get("episodeNumber");
-
+    const shortPlayId = request.nextUrl.searchParams.get("shortPlayId");
+    const episodeNumber = request.nextUrl.searchParams.get("episodeNumber");
     if (!shortPlayId || !episodeNumber) {
       return encryptedResponse(
         { success: false, error: "shortPlayId and episodeNumber are required" },
         400
       );
     }
-
-    const response = await fetch(
-      `${UPSTREAM_API}/get-episode?shortPlayId=${shortPlayId}&episodeNumber=${episodeNumber}`,
-      { cache: 'no-store' }
-    );
-
-    if (!response.ok) {
-      return encryptedResponse(
-        { success: false, error: "Failed to fetch episode" }
-      );
-    }
-
-    const data = await safeJson<any>(response);
-
-    // The episode endpoint returns { episodeList: [...], isMember, ... }
-    // episodeList typically has one item for the requested episode
-    const ep = data.episodeList?.[0];
-
-    if (!ep) {
-      return encryptedResponse(
-        { success: false, error: "Episode not found" }
-      );
-    }
-
+    const epNo = parseInt(episodeNumber, 10);
+    const { data: ticket } = await dlTicket("netshort", shortPlayId, epNo);
+    const sub = ticket.subtitles?.[0];
     return encryptedResponse({
       success: true,
       shortPlayId,
       episode: {
-        episodeId: ep.episodeId,
-        episodeNo: ep.episodeNo,
-        videoUrl: ep.playVoucher || ep.playVoucherBak || null,
-        quality: ep.playClarity || "720p",
-        sdkVid: ep.sdkVid || null,
-        // subtitleList can be null — handle gracefully
-        subtitleUrl: ep.subtitleList?.[0]?.url || null,
-        subtitleLanguage: ep.subtitleList?.[0]?.subtitleLanguage || null,
-        unlockType: ep.unlockType,
+        episodeId: `${shortPlayId}-${epNo}`,
+        episodeNo: epNo,
+        videoUrl: dlProxyUrl("netshort", "video", shortPlayId, epNo),
+        quality: ticket.clarity || "720p",
+        sdkVid: null,
+        subtitleUrl: sub
+          ? dlProxyUrl("netshort", "subtitle", shortPlayId, epNo, `&index=${sub.index}`)
+          : null,
+        subtitleLanguage: sub ? sub.lang : null,
+        unlockType: null,
       },
-      isMember: data.isMember,
+      isMember: 0,
     });
   } catch (error) {
-    console.error("NetShort Episode Error:", error);
-    return encryptedResponse(
-      { success: false, error: "Internal server error" }
-    );
+    console.error("NetShort Episode (dramaletto) Error:", error);
+    return encryptedResponse({ success: false, error: "Internal server error" });
   }
 }

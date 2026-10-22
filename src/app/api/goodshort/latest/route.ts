@@ -1,24 +1,16 @@
-import { encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { dlBrowse } from "@/lib/dramaletto";
+import { gsRankPayload } from "@/lib/goodshort-shape";
 
-const UPSTREAM_API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const res = await fetchWithRetry(`${UPSTREAM_API}/goodshort/latest`, {
-      next: { revalidate: 300 },
-      headers: {
-        "User-Agent": "okhttp/4.12.0",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch goodshort latest: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return encryptedResponse(data);
+    const items = await dlBrowse("goodshort", 1);
+    return encryptedResponse(gsRankPayload("Terbaru", items || []));
   } catch (error) {
-    console.error("GoodShort latest fetch error:", error);
+    console.error("GoodShort Latest (dramaletto) Error:", error);
     return encryptedResponse(
       { status: 500, message: "Failed to fetch from GoodShort", data: null },
       500

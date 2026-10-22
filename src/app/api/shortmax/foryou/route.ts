@@ -1,42 +1,37 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlBrowse, type DlItem } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/shortmax";
+export const dynamic = "force-dynamic";
+
+function mapShort(item: DlItem) {
+  return {
+    shortPlayId: parseInt(item.id, 10) || 0,
+    title: item.title,
+    cover: item.cover || item.poster,
+    totalEpisodes: item.totalEpisodes || 0,
+    label: (item.tags || [])[0] || "",
+    collectNum: 0,
+    playNum: item.heat || 0,
+    summary: "",
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get("page") || "1";
-
-    const response = await fetchWithRetry(`${UPSTREAM_API}/foryou?page=${page}`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse({ success: false, data: [], isEnd: true });
-    }
-
-    const data = await safeJson<any>(response);
-
-    const dramas = (data.results || []).map((item: any) => ({
-      shortPlayId: item.shortPlayId,
-      title: item.name,
-      cover: optimizeCover(item.cover),
-      totalEpisodes: item.totalEpisodes || 0,
-      playNum: item.playNum || 0,
-      summary: item.summary || "",
-    }));
-
+    const page = request.nextUrl.searchParams.get("page") || "1";
+    const items = await dlBrowse("shortmax", page);
+    const dramas = (items || []).map(mapShort);
     return encryptedResponse({
       success: true,
       data: dramas,
       page: Number(page),
-      isEnd: data.isEnd || false,
-      total: data.total || dramas.length,
+      isEnd: dramas.length === 0,
+      total: dramas.length,
     });
   } catch (error) {
-    console.error("ShortMax ForYou Error:", error);
+    console.error("ShortMax ForYou (dramaletto) Error:", error);
     return encryptedResponse({ success: false, data: [], isEnd: true });
   }
 }

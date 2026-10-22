@@ -1,61 +1,39 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { NextRequest, NextResponse } from "next/server";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { NextRequest } from "next/server";
+import { dlTitle } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const shortPlayId = searchParams.get("shortPlayId");
-
+    const shortPlayId = request.nextUrl.searchParams.get("shortPlayId");
     if (!shortPlayId) {
-      return encryptedResponse(
-        { success: false, error: "shortPlayId is required" },
-        400
-      );
+      return encryptedResponse({ success: false, error: "shortPlayId is required" }, 400);
     }
-
-    // Updated: use /detail endpoint instead of /allepisode (API update 2026-09)
-    const response = await fetchWithRetry(`${UPSTREAM_API}/detail?shortPlayId=${shortPlayId}`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse(
-        { success: false, error: "Failed to fetch detail" }
-      );
-    }
-
-    const data = await safeJson<any>(response);
-
-    // Normalize episode data — streaming data (playVoucher, subtitleList) is now
-    // fetched separately via /api/netshort/episode endpoint
-    const episodes = (data.shortPlayEpisodeInfos || []).map((ep: any) => ({
-      episodeId: ep.episodeId,
-      episodeNo: ep.episodeNo,
-      cover: ep.episodeCover,
-      isLock: ep.isLock,
-      likeNums: ep.likeNums,
-    }));
-
+    const data = await dlTitle("netshort", shortPlayId);
     return encryptedResponse({
       success: true,
-      shortPlayId: data.shortPlayId,
-      shortPlayLibraryId: data.shortPlayLibraryId,
-      title: data.shortPlayName,
-      cover: data.shortPlayCover,
-      description: data.shotIntroduce,
-      labels: data.shortPlayLabels || [],
-      totalEpisodes: data.totalEpisode,
-      isFinish: data.isFinish === 1,
-      payPoint: data.payPoint,
-      heatScore: data.formatHeatScore || "",
-      episodes,
+      shortPlayId: data.id,
+      shortPlayLibraryId: data.id,
+      title: data.title,
+      cover: data.cover,
+      description: data.synopsis || "",
+      labels: data.tags || [],
+      totalEpisodes: data.totalEpisodes,
+      isFinish: data.finished === true,
+      payPoint: 0,
+      heatScore: "",
+      episodes: (data.episodes || []).map((ep) => ({
+        episodeId: ep.episodeId,
+        episodeNo: ep.episodeNo,
+        cover: ep.cover,
+        isLock: ep.isLocked,
+        likeNums: "",
+      })),
     });
   } catch (error) {
-    console.error("NetShort Detail Error:", error);
-    return encryptedResponse(
-      { success: false, error: "Internal server error" }
-    );
+    console.error("NetShort Detail (dramaletto) Error:", error);
+    return encryptedResponse({ success: false, error: "Internal server error" });
   }
 }

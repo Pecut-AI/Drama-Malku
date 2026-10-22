@@ -1,40 +1,28 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlBrowse, type DlItem } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/flickreels";
+export const dynamic = "force-dynamic";
+
+function mapFlick(item: DlItem) {
+  return {
+    playletId: parseInt(item.id, 10) || 0,
+    title: item.title,
+    cover: item.cover || item.poster,
+    totalEpisodes: item.totalEpisodes || 0,
+    hotNum: item.heat ? String(item.heat) : "",
+    tags: item.tags || [],
+  };
+}
 
 export async function GET(_request: NextRequest) {
   try {
-    const response = await fetchWithRetry(`${UPSTREAM_API}/latest`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse({ success: false, data: [], total: 0 });
-    }
-
-    const data = await safeJson<any>(response);
-    const list = data?.data?.[0]?.list || [];
-
-    const dramas = list
-      .filter((item: any) => item && item.playlet_id !== 0 && item.playlet_id !== "0")
-      .map((item: any) => ({
-        playletId: item.playlet_id,
-        title: item.title,
-        cover: optimizeCover(item.cover),
-        totalEpisodes: parseInt(item.upload_num) || 0,
-        hotNum: item.hot_num || "",
-        tags: item.playlet_tag_name || [],
-      }));
-
-    return encryptedResponse({
-      success: true,
-      data: dramas,
-      total: dramas.length,
-    });
+    const items = await dlBrowse("flickreels", 1);
+    const dramas = (items || []).map(mapFlick);
+    return encryptedResponse({ success: true, data: dramas, total: dramas.length });
   } catch (error) {
-    console.error("FlickReels Latest Error:", error);
+    console.error("FlickReels Latest (dramaletto) Error:", error);
     return encryptedResponse({ success: false, data: [], total: 0 });
   }
 }

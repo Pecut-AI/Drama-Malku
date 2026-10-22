@@ -1,44 +1,25 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { optimizeCover } from "@/lib/image-utils";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
+import { dlSearch } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/shortmax";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("query");
-
-    if (!query) {
-      return encryptedResponse({ success: true, data: [] });
-    }
-
-    const response = await fetchWithRetry(
-      `${UPSTREAM_API}/search?query=${encodeURIComponent(query)}`,
-      { next: { revalidate: 60 } }
-    );
-
-    if (!response.ok) {
-      return encryptedResponse({ success: true, data: [] });
-    }
-
-    const data = await safeJson<any>(response);
-
-    const results = (data.results || []).map((item: any) => ({
-      shortPlayId: item.shortPlayId,
-      shortPlayCode: item.shortPlayCode,
-      title: (item.name || "").replace(/<\/?em>/g, ""),
-      cover: optimizeCover(item.cover),
-      genre: (item.genre || []).map((g: string) => g.replace(/<\/?em>/g, "")),
+    const query = request.nextUrl.searchParams.get("query");
+    if (!query) return encryptedResponse({ success: true, data: [] });
+    const items = await dlSearch("shortmax", query);
+    const results = (items || []).map((item) => ({
+      shortPlayId: parseInt(item.id, 10) || 0,
+      shortPlayCode: parseInt(item.id, 10) || 0,
+      title: item.title,
+      cover: item.cover || item.poster,
+      genre: item.tags || [],
     }));
-
-    return encryptedResponse({
-      success: true,
-      data: results,
-      total: data.total || results.length,
-    });
+    return encryptedResponse({ success: true, data: results, total: results.length });
   } catch (error) {
-    console.error("ShortMax Search Error:", error);
+    console.error("ShortMax Search (dramaletto) Error:", error);
     return encryptedResponse({ success: true, data: [] });
   }
 }

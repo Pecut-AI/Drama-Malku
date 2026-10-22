@@ -1,43 +1,31 @@
-import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
-import { NextRequest, NextResponse } from "next/server";
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
+import { encryptedResponse } from "@/lib/api-utils";
+import { NextRequest } from "next/server";
+import { dlBrowse } from "@/lib/dramaletto";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get("page") || "1";
-
-    const response = await fetchWithRetry(`${UPSTREAM_API}/foryou?page=${page}`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return encryptedResponse({ success: false, data: [] });
-    }
-
-    const data = await safeJson<any>(response);
-    
-    // Normalize the response
-    const dramas = (data.contentInfos || []).map((item: any) => ({
-      shortPlayId: item.shortPlayId,
-      shortPlayLibraryId: item.shortPlayLibraryId,
-      title: item.shortPlayName,
-      cover: item.shortPlayCover,
-      labels: item.labelArray || [],
-      heatScore: item.heatScoreShow || "",
-      scriptName: item.scriptName,
+    const page = request.nextUrl.searchParams.get("page") || "1";
+    const items = await dlBrowse("netshort", page);
+    const dramas = (items || []).map((item) => ({
+      shortPlayId: item.id,
+      shortPlayLibraryId: item.id,
+      title: item.title,
+      cover: item.cover || item.poster,
+      labels: item.tags || [],
+      heatScore: item.heat ? String(item.heat) : "",
+      scriptName: undefined,
+      totalEpisodes: item.totalEpisodes || 0,
     }));
-
     return encryptedResponse({
       success: true,
       data: dramas,
-      maxOffset: data.maxOffset,
-      completed: data.completed,
+      completed: dramas.length === 0,
     });
   } catch (error) {
-    console.error("NetShort ForYou Error:", error);
+    console.error("NetShort ForYou (dramaletto) Error:", error);
     return encryptedResponse({ success: false, data: [] });
   }
 }
-
