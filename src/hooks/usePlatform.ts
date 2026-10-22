@@ -30,14 +30,14 @@ export const PLATFORMS: PlatformInfo[] = [
   {
     id: "moboreels",
     name: "MoboReels",
-    logo: "/moboreels.svg",
+    logo: "https://wsrv.nl/?url=https%3A%2F%2Fplay-lh.googleusercontent.com%2FddOvSpN--bMJGQ7ZBPLneDDYR7AjSQNPXyYyvMW9rucIK2i-wYS3VKkJkAEEOWRH_ZLKnQb7PscTE_sKzy0H%3Ds0-br30&w=192&h=192&fit=cover&output=webp",
     apiBase: "/api/moboreels",
     source: "dramaletto",
   },
   {
     id: "dramawave",
     name: "DramaWave",
-    logo: "/dramawave.svg",
+    logo: "https://wsrv.nl/?url=https%3A%2F%2Fplay-lh.googleusercontent.com%2FqdfS5KciqnG6lP2HCxKT-CoeWrGdXsxe2sQgRR_-X-G_MVG5WZljSIesMUPkAkic0cjxgsp7gA6WMNXaq-lA6iU%3Ds0-br30&w=192&h=192&fit=cover&output=webp",
     apiBase: "/api/dramawave",
     source: "dramaletto",
   },
@@ -65,7 +65,7 @@ export const PLATFORMS: PlatformInfo[] = [
   {
     id: "vibeshort",
     name: "VibeShort",
-    logo: "/vibeshort.svg",
+    logo: "https://wsrv.nl/?url=https%3A%2F%2Fplay-lh.googleusercontent.com%2FfLxYdKk9hGCSPgtxZjjENqNluD8sTHp-rLsVgNna9E8tgvjnLno6fEgRzzLjXA5kbu0UuSUDMCjZqnFZDUfeXg%3Ds0-br30&w=192&h=192&fit=cover&output=webp",
     apiBase: "/api/vibeshort",
     source: "dramaletto",
   },

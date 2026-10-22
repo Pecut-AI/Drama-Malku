@@ -1,10 +1,16 @@
 "use client";
 
 // Beranda generik untuk platform bersumber dramaletto dengan bentuk data
-// pola NetShort (moboreels, dramawave, vibeshort). Mengikuti struktur
-// NetShortHome: banner dari Untukmu, rak Lanjut Menonton, seksi per grup
-// theater, lalu gulir tanpa batas. Error ditangani per seksi.
-import { useEffect, useRef } from "react";
+// pola NetShort (moboreels, dramawave, vibeshort).
+//
+// Mengikuti standar beranda platform lain (Melolo/FlickReels/ShortMax):
+// banner -> Lanjut Menonton -> SATU seksi grid "Rekomendasi" -> gulir
+// tanpa batas "Lainnya". Antar seksi TIDAK boleh tumpang tindih: seksi
+// Rekomendasi meratakan grup-grup theater dengan dedup, dan seksi
+// Lainnya membuang semua judul yang sudah tampil di banner/Rekomendasi
+// (versi awal komponen ini menampilkan daftar yang sama sampai 3x —
+// paling terasa di VibeShort yang katalog home dan browse-nya sama).
+import { useEffect, useMemo, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import {
   useDlTheaters,
@@ -23,6 +29,7 @@ function stripEmoji(text: string): string {
 }
 
 const EXCLUDED_SECTIONS = ['segera tayang', 'coming soon', 'upcoming'];
+const REKOMENDASI_CAP = 24;
 
 function GridSkeleton({ count = 12 }: { count?: number }) {
   return (
@@ -41,13 +48,9 @@ interface Props {
 
 export function DramalettoHome({ provider, name }: Props) {
   const { data: theatersData, isLoading: loadingTheaters, error: errorTheaters, refetch: refetchTheaters } = useDlTheaters(provider);
-  const { data: forYouData, isLoading: loadingForYou, error: errorForYou, refetch: refetchForYou } = useDlForYou(provider);
+  const { data: forYouData } = useDlForYou(provider);
 
-  const filteredGroups = (theatersData?.data || []).filter((group) => {
-    const sectionName = stripEmoji(group.groupName).toLowerCase();
-    return !EXCLUDED_SECTIONS.some((excluded) => sectionName.includes(excluded));
-  });
-
+  // Banner dari 5 judul teratas Untukmu (standar semua platform).
   const bannerItems = (forYouData?.data || []).slice(0, 5).map((drama) => ({
     id: drama.shortPlayId,
     title: drama.title,
@@ -56,6 +59,34 @@ export function DramalettoHome({ provider, name }: Props) {
     meta: drama.totalEpisodes ? `${drama.totalEpisodes} Episode` : undefined,
     tags: drama.labels?.slice(0, 3),
   }));
+
+  // Seksi tunggal "Rekomendasi": ratakan semua grup theater (kecuali grup
+  // teaser), dedup per judul, batasi jumlahnya — pola ShortMaxHome.
+  const rekomendasi = useMemo(() => {
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const group of theatersData?.data || []) {
+      const sectionName = stripEmoji(group.groupName).toLowerCase();
+      if (EXCLUDED_SECTIONS.some((ex) => sectionName.includes(ex))) continue;
+      for (const drama of group.dramas || []) {
+        if (seen.has(drama.shortPlayId)) continue;
+        seen.add(drama.shortPlayId);
+        out.push(drama);
+        if (out.length >= REKOMENDASI_CAP) return out;
+      }
+    }
+    return out;
+  }, [theatersData]);
+
+  // Judul yang sudah tampil di atas (banner 5 teratas + rekomendasi)
+  // dibuang dari seksi Lainnya agar tidak ada judul yang muncul dua kali
+  // di beranda. Judul Untukmu di luar banner TIDAK ikut dibuang — mereka
+  // memang tempatnya tampil di Lainnya.
+  const shownIds = useMemo(() => {
+    const ids = new Set<string>(rekomendasi.map((d) => d.shortPlayId));
+    for (const d of (forYouData?.data || []).slice(0, 5)) ids.add(d.shortPlayId);
+    return ids;
+  }, [rekomendasi, forYouData]);
 
   const card = (drama: any, index: number) => (
     <UnifiedMediaCard
@@ -79,61 +110,42 @@ export function DramalettoHome({ provider, name }: Props) {
 
       <ContinueWatchingShelf />
 
+      {/* Rekomendasi Section */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold font-display text-foreground">
-            Rekomendasi Untukmu
+            Rekomendasi
           </h2>
         </div>
-        {loadingForYou ? (
+        {loadingTheaters ? (
           <GridSkeleton />
-        ) : errorForYou ? (
+        ) : errorTheaters ? (
           <UnifiedErrorDisplay
             title="Gagal Memuat Rekomendasi"
             message={`Tidak dapat terhubung ke layanan ${name}.`}
-            onRetry={() => refetchForYou()}
+            onRetry={() => refetchTheaters()}
           />
-        ) : forYouData?.data && forYouData.data.length > 0 ? (
+        ) : rekomendasi.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-            {forYouData.data.map(card)}
+            {rekomendasi.map(card)}
           </div>
         ) : null}
       </section>
 
-      {loadingTheaters ? (
-        <section>
-          <div className="h-7 w-48 bg-muted/50 rounded animate-pulse mb-4" />
-          <GridSkeleton />
-        </section>
-      ) : errorTheaters ? (
-        <section>
-          <UnifiedErrorDisplay
-            title="Gagal Memuat Daftar Theater"
-            message={`Tidak dapat terhubung ke layanan ${name}.`}
-            onRetry={() => refetchTheaters()}
-          />
-        </section>
-      ) : (
-        filteredGroups.map((group) => (
-          <section key={group.groupId}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold font-display text-foreground">
-                {stripEmoji(group.groupName)}
-              </h2>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-              {group.dramas.slice(0, 12).map(card)}
-            </div>
-          </section>
-        ))
-      )}
-
-      <InfiniteDlSection provider={provider} title="Lainnya" />
+      <InfiniteDlSection provider={provider} title="Lainnya" excludeIds={shownIds} />
     </div>
   );
 }
 
-function InfiniteDlSection({ provider, title }: { provider: DlPlatformSlug; title: string }) {
+function InfiniteDlSection({
+  provider,
+  title,
+  excludeIds,
+}: {
+  provider: DlPlatformSlug;
+  title: string;
+  excludeIds: Set<string>;
+}) {
   const {
     data,
     fetchNextPage,
@@ -161,7 +173,19 @@ function InfiniteDlSection({ provider, title }: { provider: DlPlatformSlug; titl
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const allDramas = data?.pages.flatMap((page) => page.data) || [];
+  // Buang judul yang sudah tampil di seksi atas + dedup antar halaman.
+  const allDramas = useMemo(() => {
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const page of data?.pages || []) {
+      for (const drama of page.data || []) {
+        if (excludeIds.has(drama.shortPlayId) || seen.has(drama.shortPlayId)) continue;
+        seen.add(drama.shortPlayId);
+        out.push(drama);
+      }
+    }
+    return out;
+  }, [data, excludeIds]);
 
   if (isError) {
     return (

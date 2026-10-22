@@ -587,8 +587,8 @@ export function Header() {
               <div className="p-4 space-y-5">
                 {(
                   [
-                    ["dramaletto", "DramaLetto"],
-                    ["sansekai", "Sansekai"],
+                    ["dramaletto", "Stabil"],
+                    ["sansekai", "Kurang Stabil"],
                   ] as const
                 ).map(([source, label]) => (
                   <div key={source}>

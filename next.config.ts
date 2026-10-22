@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "wsrv.nl",
       },
+      {
+        protocol: "https",
+        hostname: "play-lh.googleusercontent.com",
+      },
     ],
   },
   async headers() {

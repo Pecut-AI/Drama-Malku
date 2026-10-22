@@ -54,8 +54,8 @@ export function PlatformSelector() {
           <div className="absolute left-4 right-4 mt-2 bg-card rounded-xl shadow-lg border border-border overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
             {(
               [
-                ["dramaletto", "DramaLetto"],
-                ["sansekai", "Sansekai"],
+                ["dramaletto", "Stabil"],
+                ["sansekai", "Kurang Stabil"],
               ] as const
             ).map(([source, label]) => (
               <div key={source}>

@@ -55,7 +55,14 @@ export function useDlInfinite(provider: DlPlatformSlug) {
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.completed || allPages.length >= 100) return undefined;
-      return allPages.length + 1;
+      // Berhenti bila halaman terakhir tidak menyumbang judul baru sama
+      // sekali (browse VibeShort di dramaletto mengembalikan daftar yang
+      // sama untuk semua halaman — tanpa ini gulirnya berputar selamanya).
+      const seenBefore = new Set(
+        allPages.slice(0, -1).flatMap((p) => p.data.map((d) => d.shortPlayId))
+      );
+      const hasFresh = lastPage.data.some((d) => !seenBefore.has(d.shortPlayId));
+      return hasFresh ? allPages.length + 1 : undefined;
     },
     staleTime: 5 * 60 * 1000,
   });
