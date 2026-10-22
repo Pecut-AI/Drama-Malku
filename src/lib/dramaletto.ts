@@ -1,8 +1,8 @@
 /**
  * Klien server-side untuk API publik dramaletto.com — dipakai sebagai
  * upstream DramaMalku untuk platform: netshort, goodshort, flickreels,
- * shortmax (perintah Elnath, 23 Okt 2026; menggantikan api.sansekai.my.id
- * untuk keempat platform itu).
+ * shortmax, moboreels, dramawave, vibeshort (perintah Elnath, 23 Okt
+ * 2026; menggantikan api.sansekai.my.id untuk platform-platform itu).
  *
  * Alurnya meniru persis browser pengunjung dramaletto sendiri:
  *  1. POST /api/session/bootstrap {}  -> cookie sesi anonim (HttpOnly)
@@ -24,7 +24,14 @@
 
 export const DL_BASE = "https://dramaletto.com";
 export const DL_LANG = "in"; // kode bahasa Indonesia di dramaletto = "in" (bukan "id")
-export type DlProvider = "netshort" | "goodshort" | "flickreels" | "shortmax";
+export type DlProvider =
+  | "netshort"
+  | "goodshort"
+  | "flickreels"
+  | "shortmax"
+  | "moboreels"
+  | "dramawave"
+  | "vibeshort";
 
 // ---------------------------------------------------------------- sesi
 let sessionCookie: string | null = null;
@@ -204,11 +211,78 @@ export function dlProxyUrl(
 }
 
 /**
+ * Tulis ulang teks playlist HLS dramaletto agar semua barisnya lewat proxy
+ * DramaMalku:
+ * - baris "/api/stream/..." dengan parameter u berisi URL segmen media CDN
+ *   publik -> mode=raw ke URL aslinya (lihat catatan di dalam fungsi)
+ * - baris playlist bersarang (.m3u8)                            -> mode=seg
+ * - baris "https://..." (segmen CDN langsung)                   -> mode=raw
+ * - baris relatif -> diselesaikan terhadap basePath (path playlist asal di
+ *   dramaletto, mis. ticket.video atau path sub-playlist)
+ */
+export function dlRewritePlaylistText(
+  text: string,
+  provider: DlProvider,
+  titleId: string,
+  episodeNo: number,
+  basePath: string
+): string {
+  const segBase = `/api/dramaletto/proxy?provider=${provider}&titleId=${encodeURIComponent(titleId)}&ep=${episodeNo}`;
+  const rawUrl = (u: string) => `/api/dramaletto/proxy?mode=raw&url=${encodeURIComponent(u)}`;
+  // Baris segmen dramaletto berbentuk /api/stream/hls?t=..&u=<base64 URL
+  // segmen CDN asli>&s=<tanda tangan>. URL di dalam "u" itu segmen CDN
+  // publik (terverifikasi bisa diambil tanpa autentikasi apa pun), jadi
+  // segmen media diarahkan ke URL aslinya lewat mode=raw — ini sekaligus
+  // kebal masalah sesi beda instance di serverless. Hanya playlist
+  // bersarang yang tetap lewat mode=seg (butuh sesi+tiket).
+  const rewriteDlPath = (p: string): string => {
+    try {
+      const qs = new URLSearchParams(p.split("?")[1] || "");
+      const u = qs.get("u");
+      if (u) {
+        const decoded = Buffer.from(u, "base64").toString("utf8");
+        if (/^https:\/\//.test(decoded) && !decoded.includes(".m3u8")) {
+          return rawUrl(decoded);
+        }
+      }
+    } catch {
+      /* abaikan, pakai seg */
+    }
+    return `${segBase}&mode=seg&p=${encodeURIComponent(p)}`;
+  };
+  const lines = text.split("\n").map((line) => {
+    const l = line.trim();
+    if (!l || l.startsWith("#")) {
+      return line.replace(/URI="([^"]+)"/g, (_m, uri: string) => {
+        if (uri.startsWith("/api/stream/")) return `URI="${rewriteDlPath(uri)}"`;
+        if (uri.startsWith("http")) return `URI="${rawUrl(uri)}"`;
+        return _m;
+      });
+    }
+    if (l.startsWith("/api/stream/")) {
+      return rewriteDlPath(l);
+    }
+    if (l.startsWith("http://") || l.startsWith("https://")) {
+      return rawUrl(l);
+    }
+    // baris relatif: selesaikan terhadap URL playlist asal di dramaletto
+    try {
+      const abs = new URL(l, `${DL_BASE}${basePath}`);
+      const p = abs.pathname + abs.search;
+      if (p.startsWith("/api/stream/")) {
+        return rewriteDlPath(p);
+      }
+      return rawUrl(abs.href);
+    } catch {
+      return line;
+    }
+  });
+  return lines.join("\n");
+}
+
+/**
  * Ambil playlist HLS sebuah episode dari dramaletto dan tulis ulang
- * baris-baris segmennya agar lewat proxy DramaMalku:
- * - baris "/api/stream/..." (segmen bertiket dramaletto) -> mode=seg
- * - baris "https://..." (segmen CDN langsung)             -> mode=raw
- * - baris relatif                                          -> mode=seg (diselesaikan ke path dramaletto)
+ * baris-baris segmennya agar lewat proxy DramaMalku.
  * Mengembalikan null bila respons upstream bukan playlist.
  */
 export async function dlRewrittenPlaylist(
@@ -229,58 +303,41 @@ export async function dlRewrittenPlaylist(
     if (!res.ok) return null;
     const text = await res.text();
     if (!text.includes("#EXTM3U")) return null;
-
-    const segBase = `/api/dramaletto/proxy?provider=${provider}&titleId=${encodeURIComponent(titleId)}&ep=${episodeNo}`;
-    const rawUrl = (u: string) => `/api/dramaletto/proxy?mode=raw&url=${encodeURIComponent(u)}`;
-    // Baris segmen dramaletto berbentuk /api/stream/hls?t=..&u=<base64 URL
-    // segmen CDN asli>&s=<tanda tangan>. URL di dalam "u" itu segmen CDN
-    // publik (terverifikasi bisa diambil tanpa autentikasi apa pun), jadi
-    // segmen media diarahkan ke URL aslinya lewat mode=raw — ini sekaligus
-    // kebal masalah sesi beda instance di serverless. Hanya playlist
-    // bersarang yang tetap lewat mode=seg (butuh sesi+tiket).
-    const rewriteDlPath = (p: string): string => {
-      try {
-        const qs = new URLSearchParams(p.split("?")[1] || "");
-        const u = qs.get("u");
-        if (u) {
-          const decoded = Buffer.from(u, "base64").toString("utf8");
-          if (/^https:\/\//.test(decoded) && !decoded.includes(".m3u8")) {
-            return rawUrl(decoded);
-          }
-        }
-      } catch {
-        /* abaikan, pakai seg */
-      }
-      return `${segBase}&mode=seg&p=${encodeURIComponent(p)}`;
-    };
-    const lines = text.split("\n").map((line) => {
-      const l = line.trim();
-      if (!l || l.startsWith("#")) {
-        return line.replace(/URI="([^"]+)"/g, (_m, uri: string) => {
-          if (uri.startsWith("/api/stream/")) return `URI="${rewriteDlPath(uri)}"`;
-          if (uri.startsWith("http")) return `URI="${rawUrl(uri)}"`;
-          return _m;
-        });
-      }
-      if (l.startsWith("/api/stream/")) {
-        return rewriteDlPath(l);
-      }
-      if (l.startsWith("http://") || l.startsWith("https://")) {
-        return rawUrl(l);
-      }
-      // baris relatif: selesaikan terhadap URL playlist dramaletto
-      try {
-        const abs = new URL(l, `${DL_BASE}${ticket.video}`);
-        const p = abs.pathname + abs.search;
-        if (p.startsWith("/api/stream/")) {
-          return rewriteDlPath(p);
-        }
-        return rawUrl(abs.href);
-      } catch {
-        return line;
-      }
-    });
-    return lines.join("\n");
+    return dlRewritePlaylistText(text, provider, titleId, episodeNo, ticket.video);
   }
   return null;
+}
+
+/**
+ * Bentuk payload stream satu episode dalam URL proxy DramaMalku, memilih
+ * mode dari jenis tiket dramaletto: "hls" -> playlist (dengan file=main.m3u8
+ * agar pemutar mengenali HLS), selain itu -> video MP4. Subtitle (bila ada)
+ * dikembalikan sebagai URL ABSOLUT karena halaman watch membungkusnya lagi
+ * lewat /api/proxy/video yang hanya menerima URL absolut.
+ */
+export async function dlEpisodeStream(
+  provider: DlProvider,
+  titleId: string,
+  episodeNo: number,
+  origin: string
+): Promise<{
+  videoUrl: string;
+  quality: string;
+  subtitleUrl: string | null;
+  subtitleLanguage: string | null;
+}> {
+  const { data: ticket } = await dlTicket(provider, titleId, episodeNo);
+  const videoUrl =
+    ticket.type === "hls"
+      ? dlProxyUrl(provider, "playlist", titleId, episodeNo) + "&file=main.m3u8"
+      : dlProxyUrl(provider, "video", titleId, episodeNo);
+  const sub = ticket.subtitles?.[0];
+  return {
+    videoUrl,
+    quality: ticket.clarity || "HD",
+    subtitleUrl: sub
+      ? `${origin}${dlProxyUrl(provider, "subtitle", titleId, episodeNo, `&index=${sub.index}`)}`
+      : null,
+    subtitleLanguage: sub?.lang ?? null,
+  };
 }

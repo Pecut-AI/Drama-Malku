@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Logo platform lokal ada yang berformat SVG (moboreels, dramawave,
+    // vibeshort) — izinkan SVG dari file publik milik sendiri.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 7200, // Cache optimized images for 2 hours
     remotePatterns: [
       {

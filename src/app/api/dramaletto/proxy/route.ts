@@ -1,8 +1,9 @@
 // Proxy stream terpadu untuk semua platform dramaletto (netshort,
-// goodshort, flickreels, shortmax). Server DramaMalku memegang sesi
-// dramaletto + tiketnya; browser pengunjung hanya melihat URL DramaMalku.
+// goodshort, flickreels, shortmax, moboreels, dramawave, vibeshort).
+// Server DramaMalku memegang sesi dramaletto + tiketnya; browser
+// pengunjung hanya melihat URL DramaMalku.
 //
-// mode=video     -> MP4 (netshort), meneruskan header Range (206/seek)
+// mode=video     -> MP4 (netshort, moboreels), meneruskan Range (206/seek)
 // mode=playlist  -> playlist HLS yang segmennya sudah ditulis ulang
 // mode=seg       -> satu segmen/playlist lanjutan bertiket dramaletto (?p=)
 // mode=raw       -> segmen CDN langsung tanpa tiket (?url=, https saja)
@@ -13,12 +14,21 @@ import {
   dlTicket,
   dlDropTicket,
   dlRewrittenPlaylist,
+  dlRewritePlaylistText,
   type DlProvider,
 } from "@/lib/dramaletto";
 
 export const dynamic = "force-dynamic";
 
-const PROVIDERS: DlProvider[] = ["netshort", "goodshort", "flickreels", "shortmax"];
+const PROVIDERS: DlProvider[] = [
+  "netshort",
+  "goodshort",
+  "flickreels",
+  "shortmax",
+  "moboreels",
+  "dramawave",
+  "vibeshort",
+];
 
 function parseProvider(v: string | null): DlProvider | null {
   return v && (PROVIDERS as string[]).includes(v) ? (v as DlProvider) : null;
@@ -82,14 +92,13 @@ export async function GET(request: NextRequest) {
       if (!up.ok) return new Response(`upstream ${up.status}`, { status: 502 });
       const text = await up.clone().text().catch(() => "");
       if (text.includes("#EXTM3U")) {
-        // playlist bersarang — tulis ulang juga
-        const rewritten = await dlRewrittenPlaylist(provider, titleId, ep);
-        if (rewritten) {
-          return new Response(rewritten, {
-            status: 200,
-            headers: { "Content-Type": "application/vnd.apple.mpegurl", ...CORS },
-          });
-        }
+        // playlist bersarang (mis. varian DramaWave) — tulis ulang teks
+        // playlist INI (bukan playlist induk), relatif terhadap path-nya
+        const rewritten = dlRewritePlaylistText(text, provider, titleId, ep, p);
+        return new Response(rewritten, {
+          status: 200,
+          headers: { "Content-Type": "application/vnd.apple.mpegurl", ...CORS },
+        });
       }
       const headers = new Headers(up.headers);
       headers.set("Access-Control-Allow-Origin", "*");

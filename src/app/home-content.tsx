@@ -12,6 +12,7 @@ import { DramaNovaHome } from "@/components/DramaNovaHome";
 import { GoodShortHome } from "@/components/GoodShortHome";
 import { FlickReelsHome } from "@/components/FlickReelsHome";
 import { PineDramaHome } from "@/components/PineDramaHome";
+import { DramalettoHome } from "@/components/DramalettoHome";
 import { useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/useDramas";
 import { usePlatform } from "@/hooks/usePlatform";
 import { InfiniteDramaSection } from "@/components/InfiniteDramaSection";
@@ -19,7 +20,7 @@ import { ContinueWatchingShelf } from "@/components/ContinueWatchingShelf";
 import { HomeBannerCarousel } from "@/components/HomeBannerCarousel";
 
 export default function HomeContent() {
-  const { isPineDrama, isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFreeReels, isDramaNova, isGoodShort, isFlickReels } = usePlatform();
+  const { isPineDrama, isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFreeReels, isDramaNova, isGoodShort, isFlickReels, isMoboReels, isDramaWave, isVibeShort } = usePlatform();
 
   // Fetch data for all DramaBox sections
   // const { data: popularDramas, isLoading: loadingPopular, error: errorPopular, refetch: refetchPopular } = useForYouDramas(); // REMOVED as requested (replaced by infinite scroll)
@@ -144,6 +145,27 @@ export default function HomeContent() {
       {isFlickReels && (
         <div className="container mx-auto px-4 py-6 space-y-8">
           <FlickReelsHome />
+        </div>
+      )}
+
+      {/* MoboReels Content (sumber: dramaletto) */}
+      {isMoboReels && (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          <DramalettoHome provider="moboreels" name="MoboReels" />
+        </div>
+      )}
+
+      {/* DramaWave Content (sumber: dramaletto) */}
+      {isDramaWave && (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          <DramalettoHome provider="dramawave" name="DramaWave" />
+        </div>
+      )}
+
+      {/* VibeShort Content (sumber: dramaletto) */}
+      {isVibeShort && (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          <DramalettoHome provider="vibeshort" name="VibeShort" />
         </div>
       )}
     </main>

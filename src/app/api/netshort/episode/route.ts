@@ -1,8 +1,7 @@
-// Upstream: dramaletto.com — tiket stream diminta server-side, video
-// dialirkan lewat proxy DramaMalku (/api/dramaletto/proxy?mode=video).
+// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
 import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
-import { dlTicket, dlProxyUrl } from "@/lib/dramaletto";
+import { dlEpisodeStream } from "@/lib/dramaletto";
 
 export const dynamic = "force-dynamic";
 
@@ -17,21 +16,18 @@ export async function GET(request: NextRequest) {
       );
     }
     const epNo = parseInt(episodeNumber, 10);
-    const { data: ticket } = await dlTicket("netshort", shortPlayId, epNo);
-    const sub = ticket.subtitles?.[0];
+    const stream = await dlEpisodeStream("netshort", shortPlayId, epNo, request.nextUrl.origin);
     return encryptedResponse({
       success: true,
       shortPlayId,
       episode: {
         episodeId: `${shortPlayId}-${epNo}`,
         episodeNo: epNo,
-        videoUrl: dlProxyUrl("netshort", "video", shortPlayId, epNo),
-        quality: ticket.clarity || "720p",
+        videoUrl: stream.videoUrl,
+        quality: stream.quality,
         sdkVid: null,
-        subtitleUrl: sub
-          ? dlProxyUrl("netshort", "subtitle", shortPlayId, epNo, `&index=${sub.index}`)
-          : null,
-        subtitleLanguage: sub ? sub.lang : null,
+        subtitleUrl: stream.subtitleUrl,
+        subtitleLanguage: stream.subtitleLanguage,
         unlockType: null,
       },
       isMember: 0,
