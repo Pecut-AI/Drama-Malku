@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 
 interface Props {
   provider: DlPlatformSlug;
@@ -133,6 +134,9 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
         </div>
       </div>
 
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform={provider} dramaId={id} title={data.title || ""} cover={data.cover} />
+      </div>
       <EpisodeListSection
         items={episodeItems}
         onSelect={(item) => startWatch(item.no)}

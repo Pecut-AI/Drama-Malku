@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { PosterImage } from "./PosterImage";
 import { parseDetailLink, stashDramaMeta } from "@/lib/continue-watching";
+import { FavoriteHeartButton } from "./FavoriteButton";
 
 export interface BadgeConfig {
   text: string;
@@ -46,19 +47,20 @@ export function UnifiedMediaCard({
     fontFamily: "inherit"
   };
 
+  const parsed = parseDetailLink(link);
+
   return (
+    <div className="group relative" style={{ animationDelay: `${index * 50}ms` }}>
     <Link
       href={link}
       onClick={() => {
         // Simpan judul+poster untuk rak Lanjut Menonton (dipakai bila drama
         // ini ditonton — halaman watch tidak membawa meta ini).
-        const parsed = parseDetailLink(link);
         if (parsed) {
           stashDramaMeta(parsed.platform, parsed.dramaId, { title, cover });
         }
       }}
-      className="group relative block"
-      style={{ animationDelay: `${index * 50}ms` }}
+      className="block"
     >
       {/* Visual Container */}
       <div className="aspect-[2/3] relative overflow-hidden rounded-xl bg-muted/20">
@@ -131,5 +133,19 @@ export function UnifiedMediaCard({
         )}
       </div>
     </Link>
+
+    {/* Tombol favorit (Daftar Saya) — di luar Link agar kliknya tidak
+        menavigasi ke halaman detail. */}
+    {parsed && (
+      <div className="absolute bottom-14 right-1.5 md:bottom-16 md:right-2 z-20">
+        <FavoriteHeartButton
+          platform={parsed.platform}
+          dramaId={parsed.dramaId}
+          title={title}
+          cover={cover}
+        />
+      </div>
+    )}
+    </div>
   );
 }

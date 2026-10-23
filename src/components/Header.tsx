@@ -197,7 +197,7 @@ export function Header() {
   // Chip yang sedang aktif/terpilih di deretan chip pencarian. Selalu dimulai
   // dari platform yang sedang dipilih saat ini (disinkronkan lewat effect di
   // bawah); mengklik chip platform lain memindahkan pilihan ke chip itu.
-  const [selectedChip, setSelectedChip] = useState<Platform>("melolo");
+  const [selectedChip, setSelectedChip] = useState<Platform>("netshort");
   // Platform yang sudah diminta dicari untuk query saat ini (model klik-chip).
   // Platform aktif selalu termasuk; sisanya masuk hanya lewat klik chip.
   const [activatedPlatforms, setActivatedPlatforms] = useState<Platform[]>([]);

@@ -12,6 +12,7 @@ import type { DramaDetailDirect, DramaDetailResponseLegacy } from "@/types/drama
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 
 // Helper to check if response is new format
 function isDirectFormat(data: unknown): data is DramaDetailDirect {
@@ -181,6 +182,9 @@ export default function DramaBoxDetailPage() {
         </div>
       </div>
     
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform="dramabox" dramaId={bookId || ""} title={book.bookName || ""} cover={book.cover} />
+      </div>
       <EpisodeListSection
         items={episodesFromCount(book.chapterCount)}
         onSelect={(item) => {

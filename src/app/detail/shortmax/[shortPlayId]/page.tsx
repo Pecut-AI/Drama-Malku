@@ -11,6 +11,7 @@ import { useRouter, useParams } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 
 export default function ShortMaxDetailPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -126,6 +127,9 @@ export default function ShortMaxDetailPage() {
         </div>
       </div>
     
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform="shortmax" dramaId={shortPlayId || ""} title={data.title || ""} cover={data.cover} />
+      </div>
       <EpisodeListSection
         items={episodesFromCount(data.totalEpisodes)}
         onSelect={(item) => {

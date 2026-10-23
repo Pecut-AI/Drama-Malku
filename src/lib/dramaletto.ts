@@ -162,6 +162,19 @@ const TICKET_MAX_AGE = 2 * 60 * 60 * 1000;
 const ticketKey = (p: DlProvider, titleId: string, episodeNo: number) =>
   `${p}:${titleId}:${episodeNo}:${DL_LANG}`;
 
+export interface DlGenre {
+  slug: string;
+  name: string;
+  count: number;
+  aliases?: string[];
+}
+
+/** Daftar genre global dramaletto (untuk halaman Genre). */
+export async function dlGenres(): Promise<DlGenre[]> {
+  const data = await dlJson<DlGenre[]>("/api/discover/genres?lang=in");
+  return Array.isArray(data) ? data : [];
+}
+
 export async function dlTicket(
   provider: DlProvider,
   titleId: string,

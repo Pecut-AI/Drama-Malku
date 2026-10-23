@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import { Providers } from "@/components/providers";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { BottomNav } from "@/components/BottomNav";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Suspense } from "react";
@@ -101,6 +102,7 @@ export default function RootLayout({
           </Suspense>
           {children}
           <Footer />
+          <BottomNav />
           <Toaster />
           <Sonner />
         </Providers>

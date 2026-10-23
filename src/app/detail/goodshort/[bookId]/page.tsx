@@ -8,6 +8,7 @@ import { Play, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -127,6 +128,9 @@ export default function GoodShortDetailPage() {
         </div>
       </div>
     
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform="goodshort" dramaId={params.bookId || ""} title={book.bookName || ""} cover={book.cover} />
+      </div>
       <EpisodeListSection
         items={episodesFromCount(book.chapterCount)}
         onSelect={(item) => {

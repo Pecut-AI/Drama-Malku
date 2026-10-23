@@ -8,6 +8,7 @@ import { Play, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -122,6 +123,9 @@ export default function PineDramaDetailPage() {
         </div>
       </div>
     
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform="pinedrama" dramaId={params.collectionId || ""} title={data.title || ""} cover={data.cover_urls?.[0]} />
+      </div>
       <EpisodeListSection
         items={episodesFromCount(data.total_episodes)}
         onSelect={(item) => {

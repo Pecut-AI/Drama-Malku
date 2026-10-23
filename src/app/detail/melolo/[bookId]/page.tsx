@@ -9,6 +9,7 @@ import { Play, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
 import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
+import { FavoriteToggleButton } from "@/components/FavoriteButton";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -120,6 +121,9 @@ export default function MeloloDetailPage() {
         </div>
       </div>
     
+      <div className="px-4 md:px-0 mt-5">
+        <FavoriteToggleButton platform="melolo" dramaId={params.bookId || ""} title={drama.series_title || ""} cover={drama.series_cover} />
+      </div>
       <EpisodeListSection
         items={(drama.video_list || []).map((v: any, i: number) => ({ no: i + 1, value: v.vid }))}
         onSelect={(item) => {
