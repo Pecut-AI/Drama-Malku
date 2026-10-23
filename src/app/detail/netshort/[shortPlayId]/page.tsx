@@ -127,14 +127,14 @@ export default function NetShortDetailPage() {
                 <Play className="w-5 h-5 fill-current" />
                 Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="netshort" dramaId={shortPlayId || ""} title={data.title || ""} cover={data.cover} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="netshort" dramaId={shortPlayId || ""} title={data.title || ""} cover={data.cover} />
-      </div>
       <EpisodeListSection
         items={
           data.episodes && data.episodes.length > 0

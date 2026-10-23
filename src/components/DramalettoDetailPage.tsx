@@ -129,14 +129,14 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
                 <Play className="w-5 h-5 fill-current" />
                 Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform={provider} dramaId={id} title={data.title || ""} cover={data.cover} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform={provider} dramaId={id} title={data.title || ""} cover={data.cover} />
-      </div>
       <EpisodeListSection
         items={episodeItems}
         onSelect={(item) => startWatch(item.no)}

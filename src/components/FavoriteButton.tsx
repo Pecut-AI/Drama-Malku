@@ -53,9 +53,39 @@ export function FavoriteHeartButton({ platform, dramaId, title, cover }: FavProp
   );
 }
 
-/** Tombol lebar untuk halaman detail. */
-export function FavoriteToggleButton({ platform, dramaId, title, cover }: FavProps) {
+/**
+ * Tombol untuk halaman detail. Varian "hero" menyamai ukuran tombol
+ * "Mulai Menonton" (px-8 py-3, ikon 5) dan ditaruh tepat di bawahnya.
+ */
+export function FavoriteToggleButton({
+  platform,
+  dramaId,
+  title,
+  cover,
+  variant = "default",
+}: FavProps & { variant?: "default" | "hero" }) {
   const fav = useFavoriteState(platform, dramaId);
+  if (variant === "hero") {
+    return (
+      <button
+        type="button"
+        onClick={() => toggleFavorite({ platform, dramaId, title, cover })}
+        className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold transition-all hover:scale-105 shadow-lg ${
+          fav
+            ? "text-primary-foreground"
+            : "bg-white/10 hover:bg-white/20 text-white border border-white/25"
+        }`}
+        style={fav ? { background: "var(--gradient-primary)" } : undefined}
+      >
+        {fav ? (
+          <BookmarkCheck className="w-5 h-5" />
+        ) : (
+          <Bookmark className="w-5 h-5" />
+        )}
+        {fav ? "Di Daftar Saya" : "Daftar Saya"}
+      </button>
+    );
+  }
   return (
     <button
       type="button"

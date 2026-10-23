@@ -132,14 +132,14 @@ export default function FreeReelsDetailPage() {
                   <Play className="w-5 h-5 fill-current" />
                   Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="freereels" dramaId={bookId || ""} title={drama.title || ""} cover={drama.cover} />
+              </div>
             </div>
           </div>
         </div>
       </div>
     
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="freereels" dramaId={bookId || ""} title={drama.title || ""} cover={drama.cover} />
-      </div>
       <EpisodeListSection
         items={
           drama.episodes && drama.episodes.length > 0

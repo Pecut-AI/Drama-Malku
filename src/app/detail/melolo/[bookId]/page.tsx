@@ -114,6 +114,9 @@ export default function MeloloDetailPage() {
                   Mulai Menonton
                 </button>
               )}
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="melolo" dramaId={params.bookId || ""} title={drama.series_title || ""} cover={drama.series_cover} />
+              </div>
             </div>
           </div>
 
@@ -121,9 +124,6 @@ export default function MeloloDetailPage() {
         </div>
       </div>
     
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="melolo" dramaId={params.bookId || ""} title={drama.series_title || ""} cover={drama.series_cover} />
-      </div>
       <EpisodeListSection
         items={(drama.video_list || []).map((v: any, i: number) => ({ no: i + 1, value: v.vid }))}
         onSelect={(item) => {

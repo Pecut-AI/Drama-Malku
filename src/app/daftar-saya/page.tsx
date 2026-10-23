@@ -38,12 +38,14 @@ export default function DaftarSayaPage() {
 
   return (
     <main className="min-h-screen pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Bookmark className="w-6 h-6 text-primary" />
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Daftar Saya</h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-3 mb-6">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Bookmark className="w-6 h-6 text-primary shrink-0" />
+          <h1 className="font-display text-xl md:text-3xl font-bold whitespace-nowrap">
+            Daftar Saya
+          </h1>
           {items.length > 0 && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/15 text-primary whitespace-nowrap">
               {items.length} judul
             </span>
           )}
@@ -52,7 +54,7 @@ export default function DaftarSayaPage() {
           <button
             type="button"
             onClick={() => clearFavorites()}
-            className="inline-flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground hover:text-destructive transition-colors"
+            className="ml-auto inline-flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap shrink-0"
           >
             <Trash2 className="w-4 h-4" /> Hapus semua
           </button>

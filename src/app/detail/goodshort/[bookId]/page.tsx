@@ -121,6 +121,9 @@ export default function GoodShortDetailPage() {
                 <Play className="w-5 h-5 fill-current" />
                 Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="goodshort" dramaId={params.bookId || ""} title={book.bookName || ""} cover={book.cover} />
+              </div>
               
             </div>
           </div>
@@ -128,9 +131,6 @@ export default function GoodShortDetailPage() {
         </div>
       </div>
     
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="goodshort" dramaId={params.bookId || ""} title={book.bookName || ""} cover={book.cover} />
-      </div>
       <EpisodeListSection
         items={episodesFromCount(book.chapterCount)}
         onSelect={(item) => {

@@ -116,6 +116,9 @@ export default function PineDramaDetailPage() {
                 <Play className="w-5 h-5 fill-current" />
                 Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="pinedrama" dramaId={params.collectionId || ""} title={data.title || ""} cover={data.cover_urls?.[0]} />
+              </div>
               
             </div>
           </div>
@@ -123,9 +126,6 @@ export default function PineDramaDetailPage() {
         </div>
       </div>
     
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="pinedrama" dramaId={params.collectionId || ""} title={data.title || ""} cover={data.cover_urls?.[0]} />
-      </div>
       <EpisodeListSection
         items={episodesFromCount(data.total_episodes)}
         onSelect={(item) => {

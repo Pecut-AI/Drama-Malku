@@ -122,14 +122,14 @@ export default function ShortMaxDetailPage() {
                 <Play className="w-5 h-5 fill-current" />
                 Mulai Menonton
               </button>
+              <div className="mt-4">
+                <FavoriteToggleButton variant="hero" platform="shortmax" dramaId={shortPlayId || ""} title={data.title || ""} cover={data.cover} />
+              </div>
             </div>
           </div>
         </div>
       </div>
     
-      <div className="px-4 md:px-0 mt-5">
-        <FavoriteToggleButton platform="shortmax" dramaId={shortPlayId || ""} title={data.title || ""} cover={data.cover} />
-      </div>
       <EpisodeListSection
         items={episodesFromCount(data.totalEpisodes)}
         onSelect={(item) => {
