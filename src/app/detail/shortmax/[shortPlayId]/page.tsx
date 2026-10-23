@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 export default function ShortMaxDetailPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -124,6 +125,14 @@ export default function ShortMaxDetailPage() {
           </div>
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={episodesFromCount(data.totalEpisodes)}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'shortmax', bookId: String(data.shortPlayId), episodeNumber: item.no });
+          router.push(`/watch/shortmax/${data.shortPlayId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }

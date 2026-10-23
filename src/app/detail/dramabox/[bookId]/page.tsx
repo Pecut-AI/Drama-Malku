@@ -11,6 +11,7 @@ import { useRouter, useParams } from "next/navigation";
 import type { DramaDetailDirect, DramaDetailResponseLegacy } from "@/types/drama";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 // Helper to check if response is new format
 function isDirectFormat(data: unknown): data is DramaDetailDirect {
@@ -179,6 +180,14 @@ export default function DramaBoxDetailPage() {
           </div>
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={episodesFromCount(book.chapterCount)}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'dramabox', bookId: book.bookId, episodeIndex: item.no - 1 });
+          router.push(`/watch/dramabox/${book.bookId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }

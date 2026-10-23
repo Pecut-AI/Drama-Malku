@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 interface ReelShortDetailData {
   success: boolean;
@@ -146,6 +147,14 @@ export default function ReelShortDetailPage() {
           </div>
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={episodesFromCount(data.totalEpisodes)}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'reelshort', bookId: data.bookId, episodeNumber: item.no });
+          router.push(`/watch/reelshort/${data.bookId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 export default function FreeReelsDetailPage() {
   const params = useParams();
@@ -134,6 +135,18 @@ export default function FreeReelsDetailPage() {
           </div>
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={
+          drama.episodes && drama.episodes.length > 0
+            ? drama.episodes.map((ep: any) => ({ no: (ep.index ?? 0) + 1 }))
+            : episodesFromCount(drama.episode_count)
+        }
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'freereels', bookId, episodeNumber: item.no });
+          router.push(`/watch/freereels/${bookId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }

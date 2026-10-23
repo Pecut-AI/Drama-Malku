@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 export default function NetShortDetailPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -129,6 +130,18 @@ export default function NetShortDetailPage() {
           </div>
         </div>
       </div>
+
+      <EpisodeListSection
+        items={
+          data.episodes && data.episodes.length > 0
+            ? data.episodes.map((ep) => ({ no: ep.episodeNo, locked: ep.isLock }))
+            : episodesFromCount(data.totalEpisodes)
+        }
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'netshort', bookId: data.shortPlayId, episodeNumber: item.no });
+          router.push(`/watch/netshort/${data.shortPlayId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }
@@ -147,6 +160,7 @@ function DetailSkeleton() {
           </div>
         </div>
       </div>
+
     </main>
   );
 }

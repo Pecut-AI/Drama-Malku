@@ -7,6 +7,7 @@ import { useGoodShortDetail } from "@/hooks/useGoodShort";
 import { Play, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -125,6 +126,14 @@ export default function GoodShortDetailPage() {
 
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={episodesFromCount(book.chapterCount)}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'goodshort', bookId: params.bookId, episodeIndex: item.no });
+          router.push(`/watch/goodshort/${params.bookId}/${token}`);
+        }}
+      />
     </main>
   );
 }

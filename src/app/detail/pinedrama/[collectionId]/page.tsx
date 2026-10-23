@@ -7,6 +7,7 @@ import { usePineDramaDetail, formatViews } from "@/hooks/usePineDrama";
 import { Play, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -120,6 +121,14 @@ export default function PineDramaDetailPage() {
 
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={episodesFromCount(data.total_episodes)}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'pinedrama', bookId: params.collectionId, episodeNumber: item.no });
+          router.push(`/watch/pinedrama/${params.collectionId}/${token}`);
+        }}
+      />
     </main>
   );
 }

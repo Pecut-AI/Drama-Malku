@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 interface Props {
   provider: DlPlatformSlug;
@@ -39,10 +40,15 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
     );
   }
 
-  const startWatch = () => {
-    const token = createWatchToken({ platform: provider, bookId: data.shortPlayId, episodeNumber: 1 });
+  const startWatch = (episodeNumber = 1) => {
+    const token = createWatchToken({ platform: provider, bookId: data.shortPlayId, episodeNumber });
     router.push(`/watch/${provider}/${data.shortPlayId}?t=${token}`);
   };
+
+  const episodeItems =
+    data.episodes && data.episodes.length > 0
+      ? data.episodes.map((ep) => ({ no: ep.episodeNo, locked: ep.isLock }))
+      : episodesFromCount(data.totalEpisodes);
 
   return (
     <main className="min-h-screen pt-20">
@@ -66,7 +72,7 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
               <Image src={optimizePoster(data.cover)} alt={data.title} width={600} height={900} sizes="(max-width: 768px) 80vw, 300px" className="w-full max-w-[300px] mx-auto rounded-2xl shadow-2xl h-auto" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
                 <button
-                  onClick={startWatch}
+                  onClick={() => startWatch(1)}
                   className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg"
                 >
                   <Play className="w-5 h-5 fill-current" />
@@ -115,7 +121,7 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
               </div>
 
               <button
-                onClick={startWatch}
+                onClick={() => startWatch(1)}
                 className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-primary-foreground transition-all hover:scale-105 shadow-lg"
                 style={{ background: "var(--gradient-primary)" }}
               >
@@ -126,6 +132,11 @@ export function DramalettoDetailPage({ provider, name, id }: Props) {
           </div>
         </div>
       </div>
+
+      <EpisodeListSection
+        items={episodeItems}
+        onSelect={(item) => startWatch(item.no)}
+      />
     </main>
   );
 }

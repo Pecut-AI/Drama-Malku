@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useParams } from "next/navigation";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 
 export default function FlickReelsDetailPage() {
   const params = useParams<{ playletId: string }>();
@@ -93,6 +94,18 @@ export default function FlickReelsDetailPage() {
           </div>
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={
+          data.episodes && data.episodes.length > 0
+            ? data.episodes.map((ep: any) => ({ no: ep.num, locked: ep.unlock === false }))
+            : episodesFromCount(data.totalEpisodes)
+        }
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'flickreels', bookId: playletId, episodeNumber: item.no });
+          router.push(`/watch/flickreels/${playletId}?t=${token}`);
+        }}
+      />
     </main>
   );
 }

@@ -8,6 +8,7 @@ import { useMeloloDetail } from "@/hooks/useMelolo";
 import { Play, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createWatchToken } from "@/lib/watch-session";
+import { EpisodeListSection, episodesFromCount } from "@/components/EpisodeListSection";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { optimizeBg, optimizePoster } from "@/lib/image-utils";
@@ -118,6 +119,14 @@ export default function MeloloDetailPage() {
 
         </div>
       </div>
+    
+      <EpisodeListSection
+        items={(drama.video_list || []).map((v: any, i: number) => ({ no: i + 1, value: v.vid }))}
+        onSelect={(item) => {
+          const token = createWatchToken({ platform: 'melolo', bookId: params.bookId, episodeId: String(item.value) });
+          router.push(`/watch/melolo/${params.bookId}/${token}`);
+        }}
+      />
     </main>
   );
 }
