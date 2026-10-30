@@ -14,7 +14,6 @@ import { useFreeReelsSearch } from "@/hooks/useFreeReels";
 import { useGoodShortSearch } from "@/hooks/useGoodShort";
 import { usePineDramaSearch } from "@/hooks/usePineDrama";
 import { useFlickReelsSearch } from "@/hooks/useFlickReels";
-import { useDlSearch } from "@/hooks/useDramalettoPlatform";
 import { usePlatform, type Platform, type PlatformInfo } from "@/hooks/usePlatform";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
@@ -133,15 +132,12 @@ function extractItems(platformId: Platform, raw: any): GlobalSearchItem[] {
         }))
       );
     case "netshort":
-    case "moboreels":
-    case "dramawave":
-    case "vibeshort":
       return dedupeCap(
         asArray(raw).map((d: any) => ({
           id: String(d.shortPlayId ?? ""),
           title: d.title || "",
           cover: d.cover,
-          href: `/detail/${platformId}/${d.shortPlayId}`,
+          href: `/detail/netshort/${d.shortPlayId}`,
           description: d.description,
           tags: d.labels || [],
         }))
@@ -197,7 +193,7 @@ export function Header() {
   // Chip yang sedang aktif/terpilih di deretan chip pencarian. Selalu dimulai
   // dari platform yang sedang dipilih saat ini (disinkronkan lewat effect di
   // bawah); mengklik chip platform lain memindahkan pilihan ke chip itu.
-  const [selectedChip, setSelectedChip] = useState<Platform>("netshort");
+  const [selectedChip, setSelectedChip] = useState<Platform>("melolo");
   // Platform yang sudah diminta dicari untuk query saat ini (model klik-chip).
   // Platform aktif selalu termasuk; sisanya masuk hanya lewat klik chip.
   const [activatedPlatforms, setActivatedPlatforms] = useState<Platform[]>([]);
@@ -228,9 +224,6 @@ export function Header() {
   const melolo = useMeloloSearch(queryFor("melolo"));
   const freereels = useFreeReelsSearch(queryFor("freereels"));
   const flick = useFlickReelsSearch(queryFor("flickreels"));
-  const mobo = useDlSearch("moboreels", queryFor("moboreels"));
-  const dwave = useDlSearch("dramawave", queryFor("dramawave"));
-  const vibe = useDlSearch("vibeshort", queryFor("vibeshort"));
 
   const hookByPlatform: Partial<Record<Platform, { data: any; isLoading: boolean; isError: boolean }>> = {
     pinedrama: pine,
@@ -242,9 +235,6 @@ export function Header() {
     melolo: melolo,
     freereels: freereels,
     flickreels: flick,
-    moboreels: mobo,
-    dramawave: dwave,
-    vibeshort: vibe,
   };
 
   const groups: GlobalSearchGroup[] = platforms.map((p) => {
@@ -581,57 +571,41 @@ export function Header() {
                 </button>
               </div>
 
-              {/* Platform Grid — dikelompokkan per sumber (perintah Elnath
-                  23 Okt 2026): grup DramaLetto di atas, grup khusus
-                  Sansekai di bawahnya. */}
-              <div className="p-4 space-y-5">
-                {(
-                  [
-                    ["dramaletto", "Stabil"],
-                    ["sansekai", "Kurang Stabil"],
-                  ] as const
-                ).map(([source, label]) => (
-                  <div key={source}>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      {label}
-                    </p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                      {platforms
-                        .filter((p) => p.source === source)
-                        .map((platform) => (
-                          <button
-                            key={platform.id}
-                            onClick={() => {
-                              setPlatform(platform.id);
-                              setPlatformModalOpen(false);
-                            }}
-                            className={`
+              {/* Platform Grid */}
+              <div className="p-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                  {platforms.map((platform) => (
+                    <button
+                      key={platform.id}
+                      onClick={() => {
+                        setPlatform(platform.id);
+                        setPlatformModalOpen(false);
+                      }}
+                      className={`
                         flex flex-col items-center gap-2 p-3 rounded-xl transition-all
                         ${platformInfo.id === platform.id
                           ? "bg-primary/15 ring-2 ring-primary shadow-md"
                           : "hover:bg-muted/50"
                         }
                       `}
-                          >
-                            <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-sm bg-muted/30">
-                              <Image
-                                src={platform.logo}
-                                alt={platform.name}
-                                fill
-                                className="object-cover"
-                                sizes="48px"
-                              />
-                            </div>
-                            <span className={`text-xs font-medium text-center leading-tight line-clamp-1 ${
-                              platformInfo.id === platform.id ? "text-primary" : "text-muted-foreground"
-                            }`}>
-                              {platform.name}
-                            </span>
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                ))}
+                    >
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-sm bg-muted/30">
+                        <Image
+                          src={platform.logo}
+                          alt={platform.name}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      </div>
+                      <span className={`text-xs font-medium text-center leading-tight line-clamp-1 ${
+                        platformInfo.id === platform.id ? "text-primary" : "text-muted-foreground"
+                      }`}>
+                        {platform.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Footer — current platform */}

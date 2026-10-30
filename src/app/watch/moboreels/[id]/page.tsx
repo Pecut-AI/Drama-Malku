@@ -1,9 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { DramalettoWatchPage } from "@/components/DramalettoWatchPage";
-
+// Platform MoboReels sudah tidak tersedia di DramaMalku (kembali ke API Sansekai,
+// 30 Okt 2026) — URL lama dialihkan ke beranda.
 export default function MoboReelsWatchPage() {
-  const params = useParams<{ id: string }>();
-  return <DramalettoWatchPage provider="moboreels" name="MoboReels" id={params.id} />;
+  redirect("/");
 }

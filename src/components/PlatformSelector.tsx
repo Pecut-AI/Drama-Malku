@@ -48,51 +48,36 @@ export function PlatformSelector() {
           <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
-        {/* Dropdown Menu — dikelompokkan per sumber: DramaLetto di atas,
-            Sansekai di bawahnya (mengikuti urutan PLATFORMS). */}
+        {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute left-4 right-4 mt-2 bg-card rounded-xl shadow-lg border border-border overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
-            {(
-              [
-                ["dramaletto", "Stabil"],
-                ["sansekai", "Kurang Stabil"],
-              ] as const
-            ).map(([source, label]) => (
-              <div key={source}>
-                <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {label}
-                </p>
-                {platforms
-                  .filter((p) => p.source === source)
-                  .map((platform) => (
-                    <button
-                      key={platform.id}
-                      onClick={() => {
-                        setPlatform(platform.id);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                        currentPlatform === platform.id
-                          ? 'bg-primary/10 text-primary'
-                          : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="relative w-6 h-6 rounded-md overflow-hidden">
-                        <Image
-                          src={platform.logo}
-                          alt={platform.name}
-                          fill
-                          className="object-cover"
-                          sizes="24px"
-                        />
-                      </div>
-                      <span className="font-medium">{platform.name}</span>
-                      {currentPlatform === platform.id && (
-                        <span className="ml-auto w-2 h-2 rounded-full bg-primary" />
-                      )}
-                    </button>
-                  ))}
-              </div>
+          <div className="absolute left-4 right-4 mt-2 bg-card rounded-xl shadow-lg border border-border overflow-hidden z-50">
+            {platforms.map((platform) => (
+              <button
+                key={platform.id}
+                onClick={() => {
+                  setPlatform(platform.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                  currentPlatform === platform.id 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'hover:bg-muted/50'
+                }`}
+              >
+                <div className="relative w-6 h-6 rounded-md overflow-hidden">
+                  <Image
+                    src={platform.logo}
+                    alt={platform.name}
+                    fill
+                    className="object-cover"
+                    sizes="24px"
+                  />
+                </div>
+                <span className="font-medium">{platform.name}</span>
+                {currentPlatform === platform.id && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-primary" />
+                )}
+              </button>
             ))}
           </div>
         )}

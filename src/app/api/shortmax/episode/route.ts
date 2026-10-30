@@ -1,43 +1,70 @@
-// Upstream: dramaletto.com — stream HLS bertiket, playlist dialirkan
-// lewat proxy DramaMalku (/api/dramaletto/proxy?mode=playlist).
-import { encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse } from "@/lib/api-utils";
 import { NextRequest } from "next/server";
-import { dlTicket, dlTitle, dlProxyUrl } from "@/lib/dramaletto";
 
-export const dynamic = "force-dynamic";
+const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/shortmax";
 
 export async function GET(request: NextRequest) {
   try {
-    const shortPlayId = request.nextUrl.searchParams.get("shortPlayId");
-    const episodeNumber = request.nextUrl.searchParams.get("episodeNumber");
+    const searchParams = request.nextUrl.searchParams;
+    const shortPlayId = searchParams.get("shortPlayId");
+    const episodeNumber = searchParams.get("episodeNumber");
+
     if (!shortPlayId || !episodeNumber) {
       return encryptedResponse(
         { success: false, error: "shortPlayId and episodeNumber are required" },
         400
       );
     }
-    const epNo = parseInt(episodeNumber, 10);
-    await dlTicket("shortmax", shortPlayId, epNo);
-    const title = await dlTitle("shortmax", shortPlayId).catch(() => null);
-    const epInfo = title?.episodes?.find((e) => e.episodeNo === epNo);
-    const playlist =
-      dlProxyUrl("shortmax", "playlist", shortPlayId, epNo) + "&file=main.m3u8";
+
+    const response = await fetch(
+      `${UPSTREAM_API}/get-episode?shortPlayId=${shortPlayId}&episodeNumber=${episodeNumber}`,
+      { cache: 'no-store' }
+    );
+
+    if (!response.ok) {
+      return encryptedResponse(
+        { success: false, error: "Failed to fetch episode" }
+      );
+    }
+
+    const data = await safeJson<any>(response);
+
+    if (data.status !== "ok" || !data.episode) {
+      return encryptedResponse(
+        { success: false, error: "Episode not found" }
+      );
+    }
+
+    const ep = data.episode;
+
+    // Proxy-rewrite video URLs so they go through our HLS proxy for AES decryption
+    const videoUrl: Record<string, string> = {};
+    if (ep.videoUrl) {
+      for (const [quality, url] of Object.entries(ep.videoUrl)) {
+        if (typeof url === "string" && url) {
+          videoUrl[quality] = `/api/shortmax/hls?url=${encodeURIComponent(url)}`;
+        }
+      }
+    }
+
     return encryptedResponse({
       success: true,
-      shortPlayId: parseInt(shortPlayId, 10) || 0,
-      shortPlayName: title?.title || "",
-      totalEpisodes: title?.totalEpisodes || 0,
+      shortPlayId: data.shortPlayId,
+      shortPlayName: data.shortPlayName,
+      totalEpisodes: data.totalEpisodes,
       episode: {
-        episodeNum: epNo,
-        id: epInfo ? parseInt(epInfo.episodeId, 10) || epNo : epNo,
-        duration: epInfo?.duration || 0,
-        locked: epInfo ? epInfo.isLocked : false,
-        cover: epInfo?.cover || title?.cover || "",
-        videoUrl: { video_720: playlist },
+        episodeNum: ep.episodeNumber || ep.episodeNum,
+        id: ep.id,
+        duration: ep.duration,
+        locked: ep.locked,
+        cover: ep.cover,
+        videoUrl,
       },
     });
   } catch (error) {
-    console.error("ShortMax Episode (dramaletto) Error:", error);
-    return encryptedResponse({ success: false, error: "Internal server error" });
+    console.error("ShortMax Episode Error:", error);
+    return encryptedResponse(
+      { success: false, error: "Internal server error" }
+    );
   }
 }

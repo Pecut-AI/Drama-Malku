@@ -1,28 +1,50 @@
-// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
-import { encryptedResponse } from "@/lib/api-utils";
-import { NextRequest } from "next/server";
-import { dlSearch } from "@/lib/dramaletto";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/netshort";
 
 export async function GET(request: NextRequest) {
   try {
-    const query = request.nextUrl.searchParams.get("query");
-    if (!query) return encryptedResponse({ success: true, data: [] });
-    const items = await dlSearch("netshort", query);
-    const results = (items || []).map((item) => ({
-      shortPlayId: item.id,
-      shortPlayLibraryId: item.id,
-      title: item.title,
-      cover: item.cover || item.poster,
-      labels: item.tags || [],
-      heatScore: item.heat ? String(item.heat) : "",
-      description: "",
-      totalEpisodes: item.totalEpisodes || 0,
+    const searchParams = request.nextUrl.searchParams;
+    const query = searchParams.get("query");
+
+    if (!query) {
+      return encryptedResponse({ success: true, data: [] });
+    }
+
+    const response = await fetchWithRetry(
+      `${UPSTREAM_API}/search?query=${encodeURIComponent(query)}`,
+      {
+        next: { revalidate: 60 },}
+    );
+
+    if (!response.ok) {
+      return encryptedResponse({ success: true, data: [] });
+    }
+
+    const data = await safeJson<any>(response);
+    
+    // Search results are in searchCodeSearchResult array
+    const results = data.searchCodeSearchResult || [];
+    
+    const normalizedResults = results.map((item: any) => ({
+      shortPlayId: item.shortPlayId,
+      shortPlayLibraryId: item.shortPlayLibraryId,
+      // Remove <em> tags from title
+      title: (item.shortPlayName || "").replace(/<\/?em>/g, ""),
+      cover: item.shortPlayCover,
+      labels: item.labelNameList || [],
+      heatScore: item.formatHeatScore || "",
+      description: item.shotIntroduce,
     }));
-    return encryptedResponse({ success: true, data: results });
+
+    return encryptedResponse({
+      success: true,
+      data: normalizedResults,
+    });
   } catch (error) {
-    console.error("NetShort Search (dramaletto) Error:", error);
+    console.error("NetShort Search Error:", error);
     return encryptedResponse({ success: true, data: [] });
   }
 }
+

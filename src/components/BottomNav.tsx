@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, Bookmark, LayoutGrid } from "lucide-react";
 
 /**
- * Menu navigasi bawah ala dramaletto (23 Okt 2026): Beranda, Daftar Saya,
+ * Menu navigasi bawah (23 Okt 2026): Beranda, Daftar Saya,
  * Genre. Disembunyikan di halaman watch agar tidak menutupi pemutar.
  */
 const ITEMS = [

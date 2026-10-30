@@ -1,32 +1,53 @@
-// Upstream: dramaletto.com (sejak 23 Okt 2026, menggantikan api.sansekai.my.id).
-import { encryptedResponse } from "@/lib/api-utils";
+import { safeJson, encryptedResponse, fetchWithRetry } from "@/lib/api-utils";
+import { optimizeCover } from "@/lib/image-utils";
 import { NextRequest } from "next/server";
-import { dlTitle } from "@/lib/dramaletto";
 
-export const dynamic = "force-dynamic";
+const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/shortmax";
 
 export async function GET(request: NextRequest) {
   try {
-    const shortPlayId = request.nextUrl.searchParams.get("shortPlayId");
+    const searchParams = request.nextUrl.searchParams;
+    const shortPlayId = searchParams.get("shortPlayId");
+
     if (!shortPlayId) {
-      return encryptedResponse({ success: false, error: "shortPlayId is required" }, 400);
+      return encryptedResponse(
+        { success: false, error: "shortPlayId is required" },
+        400
+      );
     }
-    const data = await dlTitle("shortmax", shortPlayId);
+
+    const response = await fetchWithRetry(`${UPSTREAM_API}/detail?shortPlayId=${shortPlayId}`, {
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      return encryptedResponse(
+        { success: false, error: "Failed to fetch detail" }
+      );
+    }
+
+    const raw = await safeJson<any>(response);
+    const data = raw.data || raw;
+
+    const labels = (data.labelResponseList || []).map((l: any) => l.labelName);
+
     return encryptedResponse({
       success: true,
-      shortPlayId: parseInt(data.id, 10) || 0,
-      shortPlayCode: parseInt(data.id, 10) || 0,
-      title: data.title,
-      cover: data.cover,
-      description: data.synopsis || "",
-      labels: data.tags || [],
-      totalEpisodes: data.totalEpisodes,
-      updateEpisode: data.totalEpisodes,
-      lockBegin: 0,
-      collectNum: 0,
+      shortPlayId: data.id,
+      shortPlayCode: data.shortPlayCode,
+      title: data.shortPlayName,
+      cover: optimizeCover(data.picUrl),
+      description: data.summary || data.recommendContent || "",
+      labels,
+      totalEpisodes: data.totalEpisodes || 0,
+      updateEpisode: data.updateEpisode || 0,
+      lockBegin: data.lockBegin || 0,
+      collectNum: data.collectNum || 0,
     });
   } catch (error) {
-    console.error("ShortMax Detail (dramaletto) Error:", error);
-    return encryptedResponse({ success: false, error: "Internal server error" });
+    console.error("ShortMax Detail Error:", error);
+    return encryptedResponse(
+      { success: false, error: "Internal server error" }
+    );
   }
 }

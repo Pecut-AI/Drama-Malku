@@ -1,6 +1,6 @@
 "use client";
 
-// Daftar episode di halaman detail — meniru dramaletto: setelah judul
+// Daftar episode di halaman detail: setelah judul
 // diklik, pengguna melihat grid nomor episode dan bisa langsung lompat
 // ke episode mana pun (bukan hanya mulai dari episode 1).
 // Dipakai bersama oleh semua platform; tiap halaman detail menyediakan

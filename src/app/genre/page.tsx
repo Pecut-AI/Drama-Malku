@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid } from "lucide-react";
 import { UnifiedMediaCard } from "@/components/UnifiedMediaCard";
@@ -9,12 +9,12 @@ import { PLATFORMS, usePlatformStore, type Platform } from "@/hooks/usePlatform"
 import { fetchJson } from "@/lib/fetcher";
 
 /**
- * Halaman Genre (23 Okt 2026).
+ * Halaman Genre (23 Okt 2026, daftar chip jadi statis 30 Okt 2026).
  *
- * Daftar genre diambil dari dramaletto (/api/dramaletto/genres — nama,
- * jumlah judul, alias). Judul per genre dicari lewat endpoint pencarian
- * platform yang sedang aktif, memakai nama genre (lalu alias bila hasil
- * sedikit) sebagai kata kunci — pola yang sama untuk semua platform.
+ * Daftar chip genre adalah DAFTAR STATIS kata kunci drama pendek yang
+ * umum — bukan data resmi dari penyedia mana pun. Judul per genre dicari
+ * lewat endpoint pencarian platform yang sedang aktif, memakai nama genre
+ * sebagai kata kunci — pola yang sama untuk semua platform.
  */
 
 interface GenreInfo {
@@ -24,17 +24,22 @@ interface GenreInfo {
   aliases?: string[];
 }
 
-const FALLBACK_GENRES: GenreInfo[] = [
-  { slug: "romansa", name: "Romansa" },
-  { slug: "balas-dendam", name: "Balas Dendam" },
+// Daftar statis kata kunci genre drama pendek (bukan data resmi).
+const STATIC_GENRES: GenreInfo[] = [
   { slug: "ceo", name: "CEO" },
+  { slug: "romantis", name: "Romantis" },
+  { slug: "balas-dendam", name: "Balas Dendam" },
+  { slug: "pernikahan", name: "Pernikahan" },
+  { slug: "pernikahan-kontrak", name: "Pernikahan Kontrak" },
+  { slug: "pewaris", name: "Pewaris" },
+  { slug: "mafia", name: "Mafia" },
+  { slug: "dokter", name: "Dokter" },
   { slug: "keluarga-kaya", name: "Keluarga Kaya" },
   { slug: "bangkit-kembali", name: "Bangkit Kembali" },
   { slug: "fantasi", name: "Fantasi" },
   { slug: "keluarga", name: "Keluarga" },
   { slug: "perkotaan", name: "Perkotaan" },
-  { slug: "mafia", name: "Mafia" },
-  { slug: "pernikahan", name: "Pernikahan" },
+  { slug: "cinta", name: "Cinta" },
 ];
 
 interface GenreItem {
@@ -142,7 +147,7 @@ function extractItems(platformId: Platform, raw: any): GenreItem[] {
         tags: d.tags || [],
       }));
     default:
-      // netshort, moboreels, dramawave, vibeshort (bentuk shortPlayId)
+      // netshort (bentuk shortPlayId)
       return map((d) => ({
         id: String(d.shortPlayId ?? ""),
         title: d.title || "",
@@ -179,15 +184,8 @@ export default function GenrePage() {
   const currentPlatform = usePlatformStore((s) => s.currentPlatform);
   const [selected, setSelected] = useState<GenreInfo | null>(null);
 
-  const genresQuery = useQuery({
-    queryKey: ["dramaletto", "genres"],
-    queryFn: () => fetchJson<any>("/api/dramaletto/genres"),
-    staleTime: 10 * 60 * 1000,
-  });
-  const genres: GenreInfo[] = useMemo(() => {
-    const data = genresQuery.data?.data;
-    return Array.isArray(data) && data.length > 0 ? data : FALLBACK_GENRES;
-  }, [genresQuery.data]);
+  // Chip genre statis (tidak lagi mengambil dari API mana pun).
+  const genres: GenreInfo[] = STATIC_GENRES;
 
   const activeGenre = selected ?? genres[0];
   const platformInfo = PLATFORMS.find((p) => p.id === currentPlatform);

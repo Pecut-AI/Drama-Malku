@@ -1,9 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { DramalettoDetailPage } from "@/components/DramalettoDetailPage";
-
+// Platform VibeShort sudah tidak tersedia di DramaMalku (kembali ke API Sansekai,
+// 30 Okt 2026) — URL lama dialihkan ke beranda.
 export default function VibeShortDetailPage() {
-  const params = useParams<{ id: string }>();
-  return <DramalettoDetailPage provider="vibeshort" name="VibeShort" id={params.id} />;
+  redirect("/");
 }
